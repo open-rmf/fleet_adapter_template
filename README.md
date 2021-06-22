@@ -1,0 +1,1 @@
+# fleet_adapter_template
