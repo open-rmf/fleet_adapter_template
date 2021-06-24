@@ -235,7 +235,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
                 elif self.state == RobotState.MOVING:
                     time.sleep(0.5)
-                    self.node.get_logger().info("Moving...")
                     # Check if we have reached the target
                     with self._lock:
                         if (self.api.navigation_completed()):
@@ -246,10 +245,13 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             else:
                                 self.on_waypoint = None # we are still on a lane
                         else:
-                            dist_to_target = self.dist(self.position, target_pose)
-                            ori_delta = abs(abs(self.position[2]) - abs(target_pose[2]))
-                            duration = dist_to_target/self.vehicle_traits.linear.nominal_velocity +\
-                              ori_delta/self.vehicle_traits.rotational.nominal_velocity
+                            ## ------------------------ ##
+                            ## IMPLEMENT YOUR CODE HERE ##
+                            ## If your robot does not have an API to report the
+                            ## remaining travel duration, replace the API call
+                            ## below with an estimation
+                            ## ------------------------ ##
+                            duration = self.api.navigation_remaining_duration()
                             assert self.next_arrival_estimator is not None
                             self.next_arrival_estimator(self.path_index, timedelta(seconds=duration))
             assert self.path_finished_callback is not None, ("path_finished_callback is None")

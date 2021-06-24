@@ -79,6 +79,14 @@ class RobotAPI:
         ## ------------------------ ##
         return False
 
+    def navigation_remaining_duration(self):
+        ''' Return the number of seconds remaining for the robot to reach its
+            destination'''
+        ## ------------------------ ##
+        ## IMPLEMENT YOUR CODE HERE ##
+        ## ------------------------ ##
+        return 0.0
+
     def navigation_completed(self):
         ''' Return True if the robot has successfully completed its previous
             navigation request. Else False.'''
