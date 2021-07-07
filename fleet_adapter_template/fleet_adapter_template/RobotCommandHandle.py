@@ -179,6 +179,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self.node.get_logger().info("Received new path to follow...")
 
         self.remaining_waypoints = self.get_remaining_waypoints(waypoints)
+        assert next_arrival_estimator is not None
+        assert path_finished_callback is not None
         self.next_arrival_estimator = next_arrival_estimator
         self.path_finished_callback = path_finished_callback
 
@@ -254,9 +256,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             ## below with an estimation
                             ## ------------------------ ##
                             duration = self.api.navigation_remaining_duration()
-                            assert self.next_arrival_estimator is not None
                             self.next_arrival_estimator(self.path_index, timedelta(seconds=duration))
-            assert self.path_finished_callback is not None, ("path_finished_callback is None")
             self.path_finished_callback()
             self.node.get_logger().info(f"Robot {self.name} has successfully navigated along requested path.")
 
@@ -282,6 +282,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self._dock_thread.join()
 
         self.dock_name = dock_name
+        assert docking_finished_callback is not None
         self.docking_finished_callback = docking_finished_callback
 
         # Get the waypoint that the robot is trying to dock into
@@ -388,12 +389,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                 print("[update] Calling update_lost_position()")
                 self.update_handle.update_lost_position(
                     self.map_name, self.position)
-
-    def dist(self, A, B):
-        ''' Euclidian distance between A(x,y) and B(x,y)'''
-        assert(len(A) > 1)
-        assert(len(B) > 1)
-        return math.sqrt((A[0] - B[0])**2 + (A[1] - B[1])**2)
 
     def get_remaining_waypoints(self, waypoints:list):
         '''
