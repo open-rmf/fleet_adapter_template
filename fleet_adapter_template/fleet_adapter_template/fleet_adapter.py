@@ -110,13 +110,13 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
         task_capabilities.append(TaskType.TYPE_CLEAN)
 
     # Callable for validating requests that this fleet can accommodate
-    def task_request_check(task_capabilities, msg: TaskProfile):
+    def _task_request_check(task_capabilities, msg: TaskProfile):
         if msg.description.task_type in task_capabilities:
             return True
         else:
             return False
 
-    fleet_handle.accept_task_requests(partial(task_request_check, task_capabilities))
+    fleet_handle.accept_task_requests(partial(_task_request_check, task_capabilities))
 
     # Transforms
     rmf_coordinates = config_yaml['reference_coordinates']['rmf']
@@ -138,7 +138,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
     print(f"    scale:{transforms['robot_to_rmf'].get_scale()}")
     print(f"    trans:{transforms['robot_to_rmf'].get_translation()}")
 
-    def updater_inserter(cmd_handle, update_handle):
+    def _updater_inserter(cmd_handle, update_handle):
         """Insert a RobotUpdateHandle."""
         cmd_handle.update_handle = update_handle
 
@@ -171,7 +171,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
                                    robot_name,
                                    profile,
                                    robot.starts,
-                                   partial(updater_inserter, robot))
+                                   partial(_updater_inserter, robot))
             print(f"    Successfully added new robot:{robot_name}")
 
         else:
