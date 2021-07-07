@@ -98,19 +98,25 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
         drain_battery)
     assert ok, ("Unable to set task planner params")
 
+    task_capabilities = []
+    if config_yaml['rmf_fleet']['task_capabilities']['loop']:
+        node.get_logger().info(f"Fleet [{fleet_name}] is configured to perform Loop tasks")
+        task_capabilities.append(TaskType.TYPE_LOOP)
+    if config_yaml['rmf_fleet']['task_capabilities']['delivery']:
+        node.get_logger().info(f"Fleet [{fleet_name}] is configured to perform Delivery tasks")
+        task_capabilities.append(TaskType.TYPE_DELIVERY)
+    if config_yaml['rmf_fleet']['task_capabilities']['clean']:
+        node.get_logger().info(f"Fleet [{fleet_name}] is configured to perform Clean tasks")
+        task_capabilities.append(TaskType.TYPE_CLEAN)
+
     # Callable for validating requests that this fleet can accommodate
-    def task_request_check(msg: TaskProfile):
-        ## ------------------------ ##
-        ## IMPLEMENT YOUR CODE HERE ##
-        ## Below is a an example for a fleet that can accept delivery and loop
-        ## tasks
-        ## ------------------------ ##
-        if ((msg.description.task_type == TaskType.TYPE_DELIVERY) or
-            (msg.description.task_type == TaskType.TYPE_LOOP)):
+    def task_request_check(task_capabilities, msg: TaskProfile):
+        if msg.description.task_type in task_capabilities:
             return True
         else:
             return False
-    fleet_handle.accept_task_requests(task_request_check)
+
+    fleet_handle.accept_task_requests(partial(task_request_check, task_capabilities))
 
     # Transforms
     rmf_coordinates = config_yaml['reference_coordinates']['rmf']

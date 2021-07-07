@@ -26,6 +26,10 @@ rmf_fleet:
   recharge_soc: 1.0 # Battery level to which robots in this fleet should be charged up to during recharging tasks
   publish_fleet_state: True
   account_for_battery_drain: True
+  task_capabilities: # Specify the types of RMF Tasks that robots in this fleet are capable of performing
+    loop: True
+    delivery: False
+    clean: False
 
 # DeliveryBot CONFIG =================================================================
 
