@@ -160,6 +160,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self.node.get_logger().info("Requesting robot to stop...")
             if self.api.stop():
                 break
+            time.sleep(1.0)
         if self._follow_path_thread is not None:
             self._quit_path_event.set()
             self._follow_path_thread.join()
@@ -218,10 +219,11 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                         self.on_lane = lane.index
                             self.on_waypoint = None
                     else:
-                        self.node.get_logger().info(f"Robot {self.name} failed to navigate to [{x:.0f}, {y:.0f}, {theta:.0f}] grid coordinates. Retrying...")
+                        self.node.get_logger().info(f"Robot {self.name} failed to navigate to [{x:.0f}, {y:.0f}, {theta:.0f}] coordinates. Retrying...")
+                        time.sleep(1.0)
 
                 elif self.state == RobotState.WAITING:
-                    time.sleep(0.1)
+                    time.sleep(1.0)
                     time_now = self.adapter.now()
                     with self._lock:
                         waypoint_wait_time = self.target_waypoint.time
@@ -234,7 +236,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
 
                 elif self.state == RobotState.MOVING:
-                    time.sleep(0.5)
+                    time.sleep(1.0)
                     # Check if we have reached the target
                     with self._lock:
                         if (self.api.navigation_completed()):
@@ -304,8 +306,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                 if self._quit_dock_event.is_set():
                     self.node.get_logger().info("Aborting docking")
                     return
-                time.sleep(0.5)
                 self.node.get_logger().info("Robot is docking...")
+                time.sleep(1.0)
 
             with self._lock:
                 self.on_waypoint = self.dock_waypoint_index
