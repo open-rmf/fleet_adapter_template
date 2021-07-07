@@ -73,7 +73,8 @@ class RobotAPI:
         return False
 
     def stop(self):
-        ''' Return True if robot has successfully stopped. Else False'''
+        ''' Command the robot to stop.
+            Return True if robot has successfully stopped. Else False'''
         ## ------------------------ ##
         ## IMPLEMENT YOUR CODE HERE ##
         ## ------------------------ ##
