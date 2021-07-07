@@ -104,13 +104,13 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         self.position = self.get_position() # RMF coordinates
         assert len(self.position) > 2, "Unable to get current location of the robot for initialization"
-        print(f"The robot is starting at: [{self.position[0]:.2f}, {self.position[1]:.2f}, {self.position[2]:.2f}")
+        self.node.get_logger().info(f"The robot is starting at: [{self.position[0]:.2f}, {self.position[1]:.2f}, {self.position[2]:.2f}")
         # Obtain StartSet for the robot
         self.starts = []
         time_now = self.adapter.now()
         if (self.initial_waypoint is not None) and\
             (self.initial_orientation is not None):
-            print(f"    Using provided initial waypoint [{self.initial_waypoint}] "
+            self.node.get_logger().info(f"    Using provided initial waypoint [{self.initial_waypoint}] "
             f"and orientation [{self.initial_orientation:.2f}] to initialize "
             f"starts for robot:{self.name}")
             # Get the waypoint index for initial_waypoint
@@ -119,7 +119,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                 initial_waypoint_index,
                                 self.initial_orientation)]
         else:
-            print(f"    Running compute_plan_starts for robot:{self.name}")
+            self.node.get_logger().info(f"    Running compute_plan_starts for robot:{self.name}")
             self.starts = plan.compute_plan_starts(
                 self.graph,
                 self.map_name,
@@ -131,7 +131,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         # Update tracking variables
         if start.lane is not None:  # If the robot is on a lane
-            print(f"Start lane index:{start.lane}")
             self.last_known_lane_index = start.lane
             self.on_lane = start.lane
             self.last_known_waypoint_index = start.waypoint
@@ -242,7 +241,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     # Check if we have reached the target
                     with self._lock:
                         if (self.api.navigation_completed()):
-                            print(f"Robot [{self.name}] has reached its target waypoint")
+                            self.node.get_logger().info(f"Robot [{self.name}] has reached its target waypoint")
                             self.state = RobotState.WAITING
                             if (self.target_waypoint.graph_index is not None):
                                 self.on_waypoint = self.target_waypoint.graph_index
@@ -359,7 +358,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         # Update position
         with self._lock:
             if (self.on_waypoint is not None): # if robot is on a waypoint
-                print(f"[update] Calling update_current_waypoint() with waypoint[{self.on_waypoint}] and ori[{self.position[2]:.2f}]")
                 self.update_handle.update_current_waypoint(
                     self.on_waypoint, self.position[2])
             elif (self.on_lane is not None): # if robot is on a lane
@@ -374,19 +372,15 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                 lane_indices = [self.on_lane]
                 if reverse_lane is not None: # Unidirectional graph
                     lane_indices.append(reverse_lane.index)
-                print(f"[update] Calling update_current_lanes() with pose[{self.position[0]:.2f}, {self.position[1]:.2f}, {self.position[2]:.2f}] and lanes:{lane_indices}")
                 self.update_handle.update_current_lanes(
                     self.position, lane_indices)
             elif (self.target_waypoint is not None and self.target_waypoint.graph_index is not None): # if robot is merging into a waypoint
-                print(f"[update] Calling update_off_grid_position() with pose[{self.position[0]:.2f}, {self.position[1]:.2f}, {self.position[2]:.2f}] and waypoint[{self.target_waypoint.graph_index}]")
                 self.update_handle.update_off_grid_position(
                     self.position, self.target_waypoint.graph_index)
             elif (self.dock_waypoint_index is not None):
-                print(f"[update] Calling update_off_grid_position() with pose[{self.position[0]:.2f}, {self.position[1]:.2f}, {self.position[2]:.2f}] and waypoint[{self.dock_waypoint_index}]")
                 self.update_handle.update_off_grid_position(
                     self.position, self.dock_waypoint_index)
             else: # if robot is lost
-                print("[update] Calling update_lost_position()")
                 self.update_handle.update_lost_position(
                     self.map_name, self.position)
 

@@ -145,7 +145,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
     # Initialize robots for this fleet
     robots = {}
     for robot_name, robot_config in config_yaml['robots'].items():
-        print(f"    Initializing robot:{robot_name}")
+        node.get_logger().info(f"    Initializing robot:{robot_name}")
         rmf_config = robot_config['rmf_config']
         robot_config = robot_config['robot_config']
         initial_waypoint = rmf_config['start']['waypoint']
@@ -172,10 +172,10 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
                                    profile,
                                    robot.starts,
                                    partial(_updater_inserter, robot))
-            print(f"    Successfully added new robot:{robot_name}")
+            node.get_logger().info(f"    Successfully added new robot:{robot_name}")
 
         else:
-            print(f"    Failed to initialize robot:{robot_name}")
+            node.get_logger().error(f"    Failed to initialize robot:{robot_name}")
 
     return adapter, fleet_handle, robots
 
