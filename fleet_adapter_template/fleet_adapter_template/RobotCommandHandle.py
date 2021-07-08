@@ -199,10 +199,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     target_pose =  self.target_waypoint.position
                     [x,y] = self.transforms["rmf_to_robot"].transform(target_pose[:2])
                     theta = math.degrees(target_pose[2] + self.transforms['orientation_offset'])
-                    ## ------------------------ ##
-                    ## IMPLEMENT YOUR CODE HERE ##
-                    ## Ensure x, y, theta are in units that api.navigate() expects ##
-                    ## ------------------------ ##
+                    # ------------------------ #
+                    # IMPLEMENT YOUR CODE HERE #
+                    # Ensure x, y, theta are in units that api.navigate() expects #
+                    # ------------------------ #
                     response = self.api.navigate([x, y, theta], self.map_name)
 
                     if response:
@@ -248,12 +248,12 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             else:
                                 self.on_waypoint = None # we are still on a lane
                         else:
-                            ## ------------------------ ##
-                            ## IMPLEMENT YOUR CODE HERE ##
-                            ## If your robot does not have an API to report the
-                            ## remaining travel duration, replace the API call
-                            ## below with an estimation
-                            ## ------------------------ ##
+                            # ------------------------ #
+                            # IMPLEMENT YOUR CODE HERE #
+                            # If your robot does not have an API to report the
+                            # remaining travel duration, replace the API call
+                            # below with an estimation
+                            # ------------------------ #
                             duration = self.api.navigation_remaining_duration()
                             self.next_arrival_estimator(self.path_index, timedelta(seconds=duration))
             self.path_finished_callback()
@@ -297,10 +297,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self.on_waypoint = None
             self.on_lane = None
             time.sleep(1.0)
-            ## ------------------------ ##
-            ## IMPLEMENT YOUR CODE HERE ##
-            ## With whatever logic you need for docking ##
-            ## ------------------------ ##
+            # ------------------------ #
+            # IMPLEMENT YOUR CODE HERE #
+            # With whatever logic you need for docking #
+            # ------------------------ #
             while (not self.api.docking_completed()):
                 # Check if we need to abort
                 if self._quit_dock_event.is_set():
@@ -324,10 +324,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         if position is not None:
             x,y = self.transforms['robot_to_rmf'].transform([position[0],position[1]])
             theta = math.radians(position[2]) - self.transforms['orientation_offset']
-            ## ------------------------ ##
-            ## IMPLEMENT YOUR CODE HERE ##
-            ## Ensure x, y are in meters and theta in radians ##
-            ## ------------------------ ##
+            # ------------------------ #
+            # IMPLEMENT YOUR CODE HERE #
+            # Ensure x, y are in meters and theta in radians #
+            # ------------------------ #
             return [x,y,theta]
         else:
             self.node.get_logger().error("Unable to retrieve position from robot. Returning last known position...")

@@ -8,7 +8,7 @@ The objective of this package is to serve as a reference or template for writing
 Simply fill up certain blocks of code which make API calls to your mobile robotic fleet.
 These blocks are highlighted as seen below and are found in `RobotClientAPI.py` and `RobotCommandHandle.py` respectively.
 ```
-## IMPLEMENT YOUR CODE HERE ##
+# IMPLEMENT YOUR CODE HERE #
 ```
 
 The bulk of the work is in populating the `RobotClientAPI.py` file which defines a wrapper for communicating with the fleet of interest.
