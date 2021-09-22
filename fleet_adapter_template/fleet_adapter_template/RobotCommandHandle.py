@@ -113,6 +113,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         assert self.api.connected, "Unable to connect to Robot API server"
 
         self.position = self.get_position()  # RMF coordinates
+        print(f"position: {self.position}")
         assert len(
             self.position) > 2, "Unable to get current location of the robot"
         self.node.get_logger().info(
@@ -144,7 +145,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         if self.starts is None or len(self.starts) == 0:
             self.node.get_logger().error(
-                "Unable to determine StartSet for {self.name}")
+                f"Unable to determine StartSet for {self.name}")
             return
         start = self.starts[0]
 
@@ -170,7 +171,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self.path_finished_callback = None
             self.next_arrival_estimator = None
             self.docking_finished_callback = None
-            # self.target_waypoint = None
             self.state = RobotState.IDLE
 
     def stop(self):
@@ -188,10 +188,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self.clear()
 
     def follow_new_path(
-            self,
-            waypoints,
-            next_arrival_estimator,
-            path_finished_callback):
+        self,
+        waypoints,
+        next_arrival_estimator,
+        path_finished_callback):
 
         self.stop()
         self._quit_path_event.clear()
@@ -414,7 +414,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         if not self.charger_is_set:
             if ("max_delay" in self.config.keys()):
                 max_delay = self.config["max_delay"]
-                print(f"Setting max delay to {max_delay}s")
+                self.node.get_logger().info(
+                    f"Setting max delay to {max_delay}s")
                 self.update_handle.set_maximum_delay(max_delay)
             if (self.charger_waypoint_index < self.graph.num_waypoints):
                 self.update_handle.set_charger_waypoint(
@@ -448,9 +449,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                 self.update_handle.update_off_grid_position(
                     self.position, self.dock_waypoint_index)
             # if robot is merging into a waypoint
-            elif (
-                    self.target_waypoint is not None and
-                    self.target_waypoint.graph_index is not None):
+            elif (self.target_waypoint is not None and \
+                self.target_waypoint.graph_index is not None):
                 self.update_handle.update_off_grid_position(
                     self.position, self.target_waypoint.graph_index)
             else:  # if robot is lost
