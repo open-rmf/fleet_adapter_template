@@ -33,7 +33,7 @@ class RobotAPI:
         self.connected = False
         # Test connectivity
         connected = self.check_connection()
-        if connected is not None:
+        if connected:
             print("Successfully able to query API server")
             self.connected = True
         else:
@@ -44,7 +44,7 @@ class RobotAPI:
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
-        return False
+        return True
 
     def position(self):
         ''' Return [x, y, theta] expressed in the robot's coordinate frame or

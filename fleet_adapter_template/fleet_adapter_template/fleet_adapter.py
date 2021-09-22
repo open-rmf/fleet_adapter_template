@@ -16,6 +16,7 @@ import sys
 import argparse
 import yaml
 import nudged
+import time
 
 import rclpy
 import rclpy.node
@@ -39,7 +40,7 @@ from .RobotCommandHandle import RobotCommandHandle
 # ------------------------------------------------------------------------------
 
 
-def initialize_fleet(config_yaml, nav_graph_path, node):
+def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time):
     # Profile and traits
     fleet_config = config_yaml['rmf_fleet']
     profile = traits.Profile(geometry.make_final_convex_circle(
@@ -81,9 +82,13 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
     # Adapter
     fleet_name = fleet_config['name']
     adapter = adpt.Adapter.make(f'{fleet_name}_fleet_adapter')
-
+    if use_sim_time:
+        adapter.node.use_sim_time()
     assert adapter, ("Unable to initialize fleet adapter. Please ensure "
                      "RMF Schedule Node is running")
+    adapter.start()
+    time.sleep(1.0)
+
     fleet_handle = adapter.add_fleet(fleet_name, vehicle_traits, nav_graph)
 
     if not fleet_config['publish_fleet_state']:
@@ -92,6 +97,8 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
     drain_battery = fleet_config['account_for_battery_drain']
     recharge_threshold = fleet_config['recharge_threshold']
     recharge_soc = fleet_config['recharge_soc']
+    finishing_request = fleet_config['task_capabilities']['finishing_request']
+    node.get_logger().info(f"Finishing request: [{finishing_request}]")
     # Set task planner params
     ok = fleet_handle.set_task_planner_params(
         battery_sys,
@@ -100,7 +107,8 @@ def initialize_fleet(config_yaml, nav_graph_path, node):
         tool_sink,
         recharge_threshold,
         recharge_soc,
-        drain_battery)
+        drain_battery,
+        finishing_request)
     assert ok, ("Unable to set task planner params")
 
     task_capabilities = []
@@ -223,23 +231,22 @@ def main(argv=sys.argv):
     # ROS 2 node for the command handle
     node = rclpy.node.Node('robot_command_handle')
 
-    adapter, fleet_handle, robots = initialize_fleet(
-        config_yaml,
-        nav_graph_path,
-        node)
-
     # Enable sim time for testing offline
     if args.use_sim_time:
         param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
-        adapter.node.use_sim_time()
         node.set_parameters([param])
+
+    adapter, fleet_handle, robots = initialize_fleet(
+        config_yaml,
+        nav_graph_path,
+        node,
+        args.use_sim_time)
 
     # Create executor for the command handle node
     rclpy_executor = rclpy.executors.SingleThreadedExecutor()
     rclpy_executor.add_node(node)
 
     # Start the fleet adapter
-    adapter.start()
     rclpy_executor.spin()
 
     # Shutdown
