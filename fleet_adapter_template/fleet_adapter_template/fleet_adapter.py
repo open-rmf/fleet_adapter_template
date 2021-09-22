@@ -236,7 +236,7 @@ def main(argv=sys.argv):
         param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
         node.set_parameters([param])
 
-    adapter,fleet_handle,robots = initialize_fleet(
+    adapter, fleet_handle, robots = initialize_fleet(
         config_yaml,
         nav_graph_path,
         node,

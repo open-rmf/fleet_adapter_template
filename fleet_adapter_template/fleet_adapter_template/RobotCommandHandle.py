@@ -144,7 +144,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         if self.starts is None or len(self.starts) == 0:
             self.node.get_logger().error(
-	        "Unable to determine StartSet for {self.name}")
+                "Unable to determine StartSet for {self.name}")
             return
         start = self.starts[0]
 
@@ -207,9 +207,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         def _follow_path():
             target_pose = []
             while (
-              self.remaining_waypoints or
-              self.state == RobotState.MOVING or
-              self.state == RobotState.WAITING):
+                    self.remaining_waypoints or
+                    self.state == RobotState.MOVING or
+                    self.state == RobotState.WAITING):
                 # Check if we need to abort
                 if self._quit_path_event.is_set():
                     self.node.get_logger().info("Aborting previously followed "
@@ -224,7 +224,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     target_pose = self.target_waypoint.position
                     [x, y] = self.transforms["rmf_to_robot"].transform(
                         target_pose[:2])
-                    theta = target_pose[2] + self.transforms['orientation_offset']
+                    theta = target_pose[2] + \
+                        self.transforms['orientation_offset']
                     # ------------------------ #
                     # IMPLEMENT YOUR CODE HERE #
                     # Ensure x, y, theta are in units that api.navigate() #
@@ -254,7 +255,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                     self.node.get_logger().info(
                                         f"Waiting for "
                                         f"{(waypoint_wait_time - time_now).seconds}s")
-                                    self.next_arrival_estimator(self.path_index, timedelta(seconds=0.0))
+                                    self.next_arrival_estimator(
+                                        self.path_index, timedelta(seconds=0.0))
 
                 elif self.state == RobotState.MOVING:
                     time.sleep(1.0)
@@ -267,8 +269,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             self.state = RobotState.WAITING
                             if (self.target_waypoint.graph_index is not None):
                                 self.on_waypoint = \
-                                  self.target_waypoint.graph_index
-                                self.last_known_waypoint_index = self.on_waypoint
+                                    self.target_waypoint.graph_index
+                                self.last_known_waypoint_index = \
+                                    self.on_waypoint
                             else:
                                 self.on_waypoint = None  # still on a lane
                         else:
@@ -280,12 +283,16 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             else:
                                 # The robot may either be on the previous
                                 # waypoint or the target one
-                                if self.target_waypoint.graph_index is not None and self.dist(self.position, target_pose) < 0.5:
+                                if self.target_waypoint.graph_index is not \
+                                    None and self.dist(self.position, target_pose) < 0.5:
                                     self.on_waypoint = self.target_waypoint.graph_index
-                                elif self.last_known_waypoint_index is not None and self.dist(self.position, self.graph.get_waypoint(self.last_known_waypoint_index).location) < 0.5:
+                                elif self.last_known_waypoint_index is not \
+                                    None and self.dist(
+                                    self.position, self.graph.get_waypoint(
+                                      self.last_known_waypoint_index).location) < 0.5:
                                     self.on_waypoint = self.last_known_waypoint_index
                                 else:
-                                    self.on_lane = None # update_off_grid()
+                                    self.on_lane = None  # update_off_grid()
                                     self.on_waypoint = None
                         # ------------------------ #
                         # IMPLEMENT YOUR CODE HERE #
@@ -375,12 +382,12 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             # IMPLEMENT YOUR CODE HERE #
             # Ensure x, y are in meters and theta in radians #
             # ------------------------ #
-            # Wrap theta between [-pi, pi]. Very important else arrival estimate
-            # will assume robot has to do full rotations and delay the schedule
+            # Wrap theta between [-pi, pi]. Else arrival estimate will
+            # assume robot has to do full rotations and delay the schedule
             if theta > np.pi:
                 theta = theta - (2 * np.pi)
             if theta < -np.pi:
-                theta =  (2 * np.pi) + theta
+                theta = (2 * np.pi) + theta
             return [x, y, theta]
         else:
             self.node.get_logger().error(
@@ -442,8 +449,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     self.position, self.dock_waypoint_index)
             # if robot is merging into a waypoint
             elif (
-              self.target_waypoint is not None and
-              self.target_waypoint.graph_index is not None):
+                    self.target_waypoint is not None and
+                    self.target_waypoint.graph_index is not None):
                 self.update_handle.update_off_grid_position(
                     self.position, self.target_waypoint.graph_index)
             else:  # if robot is lost
@@ -455,17 +462,18 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                        target_position,
                        lane_entry,
                        lane_exit):
-            px, py , _ = current_position
+            px, py, _ = current_position
             p = np.array([px, py])
             t = np.array(target_position)
             entry = np.array(lane_entry)
             exit = np.array(lane_exit)
             return np.dot(p - t, exit - entry)
 
-        if self.target_waypoint == None:
+        if self.target_waypoint is None:
             return None
         approach_lanes = self.target_waypoint.approach_lanes
-        if approach_lanes == None or len(approach_lanes) == 0: # Spin on the spot
+        # Spin on the spot
+        if approach_lanes is None or len(approach_lanes) == 0:
             return None
         # Determine which lane the robot is currently on
         for lane_index in approach_lanes:
@@ -475,7 +483,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             p = self.position
             before_lane = projection(p, p0, p0, p1) < 0.0
             after_lane = projection(p, p1, p0, p1) >= 0.0
-            if not before_lane and not after_lane: # The robot is on this lane
+            if not before_lane and not after_lane:  # The robot is on this lane
                 return lane_index
         return None
 
