@@ -113,7 +113,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         assert self.api.connected, "Unable to connect to Robot API server"
 
         self.position = self.get_position()  # RMF coordinates
-        print(f"position: {self.position}")
         assert len(
             self.position) > 2, "Unable to get current location of the robot"
         self.node.get_logger().info(
@@ -207,9 +206,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         def _follow_path():
             target_pose = []
             while (
-                    self.remaining_waypoints or
-                    self.state == RobotState.MOVING or
-                    self.state == RobotState.WAITING):
+                self.remaining_waypoints or
+                self.state == RobotState.MOVING or
+                self.state == RobotState.WAITING):
                 # Check if we need to abort
                 if self._quit_path_event.is_set():
                     self.node.get_logger().info("Aborting previously followed "
