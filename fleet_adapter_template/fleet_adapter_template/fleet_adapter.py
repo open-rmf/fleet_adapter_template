@@ -17,6 +17,7 @@ import argparse
 import yaml
 import nudged
 import time
+import threading
 
 import rclpy
 import rclpy.node
@@ -34,6 +35,7 @@ from rmf_task_msgs.msg import TaskProfile, TaskType
 from functools import partial
 
 from .RobotCommandHandle import RobotCommandHandle
+from .RobotClientAPI import RobotAPI
 
 # ------------------------------------------------------------------------------
 # Helper functions
@@ -160,44 +162,108 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time):
         """Insert a RobotUpdateHandle."""
         cmd_handle.update_handle = update_handle
 
+    # Initialize robot API for this fleet
+    api = RobotAPI(
+        fleet_config['fleet_manager']['prefix'],
+        fleet_config['fleet_manager']['user'],
+        fleet_config['fleet_manager']['password'])
+
     # Initialize robots for this fleet
-    robots = {}
-    for robot_name, robot_config in config_yaml['robots'].items():
-        node.get_logger().info(f"Initializing robot:{robot_name}")
-        rmf_config = robot_config['rmf_config']
-        robot_config = robot_config['robot_config']
-        initial_waypoint = rmf_config['start']['waypoint']
-        initial_orientation = rmf_config['start']['orientation']
-        robot = RobotCommandHandle(
-            name=robot_name,
-            config=robot_config,
-            node=node,
-            graph=nav_graph,
-            vehicle_traits=vehicle_traits,
-            transforms=transforms,
-            map_name=rmf_config['start']['map_name'],
-            initial_waypoint=initial_waypoint,
-            initial_orientation=initial_orientation,
-            charger_waypoint=rmf_config['charger']['waypoint'],
-            update_frequency=rmf_config.get('robot_state_update_frequency', 1),
-            adapter=adapter)
 
-        if robot.initialized:
-            robots[robot_name] = robot
-            # Add robot to fleet
-            fleet_handle.add_robot(robot,
-                                   robot_name,
-                                   profile,
-                                   robot.starts,
-                                   partial(_updater_inserter, robot))
-            node.get_logger().info(
-                f"Successfully added new robot:{robot_name}")
+    missing_robots = config_yaml['robots']
 
-        else:
-            node.get_logger().error(
-                f"Failed to initialize robot:{robot_name}")
+    def _add_fleet_robots():
+        robots = {}
+        while len(missing_robots) > 0:
+            time.sleep(0.2)
+            for robot_name in list(missing_robots.keys()):
+                node.get_logger().debug(f"Connecting to robot: {robot_name}")
+                position = api.position(robot_name)
+                if position is None:
+                    continue
+                if len(position) > 2:
+                    node.get_logger().info(f"Initializing robot: {robot_name}")
+                    robots_config = config_yaml['robots'][robot_name]
+                    rmf_config = robots_config['rmf_config']
+                    robot_config = robots_config['robot_config']
+                    initial_waypoint = rmf_config['start']['waypoint']
+                    initial_orientation = rmf_config['start']['orientation']
 
-    return adapter, fleet_handle, robots
+                    starts = []
+                    time_now = adapter.now()
+
+                    if (initial_waypoint is not None) and\
+                            (initial_orientation is not None):
+                        node.get_logger().info(
+                            f"Using provided initial waypoint "
+                            "[{initial_waypoint}] "
+                            f"and orientation [{initial_orientation:.2f}] to "
+                            f"initialize starts for robot [{robot_name}]")
+                        # Get the waypoint index for initial_waypoint
+                        initial_waypoint_index = nav_graph.find_waypoint(
+                            initial_waypoint).index
+                        starts = [plan.Start(time_now,
+                                             initial_waypoint_index,
+                                             initial_orientation)]
+                    else:
+                        node.get_logger().info(
+                            f"Running compute_plan_starts for robot: "
+                            "{robot_name}")
+                        starts = plan.compute_plan_starts(
+                            nav_graph,
+                            rmf_config['start']['map_name'],
+                            position,
+                            time_now)
+
+                    if starts is None or len(starts) == 0:
+                        node.get_logger().error(
+                            f"Unable to determine StartSet for {robot_name}")
+                        continue
+
+                    robot = RobotCommandHandle(
+                        name=robot_name,
+                        fleet_name=fleet_name,
+                        config=robot_config,
+                        node=node,
+                        graph=nav_graph,
+                        vehicle_traits=vehicle_traits,
+                        transforms=transforms,
+                        map_name=rmf_config['start']['map_name'],
+                        start=starts[0],
+                        position=position,
+                        charger_waypoint=rmf_config['charger']['waypoint'],
+                        update_frequency=rmf_config.get(
+                            'robot_state_update_frequency', 1),
+                        adapter=adapter,
+                        api=api)
+
+                    if robot.initialized:
+                        robots[robot_name] = robot
+                        # Add robot to fleet
+                        fleet_handle.add_robot(robot,
+                                               robot_name,
+                                               profile,
+                                               [starts[0]],
+                                               partial(_updater_inserter,
+                                                       robot))
+                        node.get_logger().info(
+                            f"Successfully added new robot: {robot_name}")
+
+                    else:
+                        node.get_logger().error(
+                            f"Failed to initialize robot: {robot_name}")
+
+                    del missing_robots[robot_name]
+
+                else:
+                    pass
+                    node.get_logger().debug(
+                        f"{robot_name} not found, trying again...")
+        return
+
+    add_robots = threading.Thread(target=_add_fleet_robots, args=())
+    add_robots.start()
+    return adapter
 
 
 # ------------------------------------------------------------------------------
@@ -229,14 +295,15 @@ def main(argv=sys.argv):
         config_yaml = yaml.safe_load(f)
 
     # ROS 2 node for the command handle
-    node = rclpy.node.Node('robot_command_handle')
+    fleet_name = config_yaml['rmf_fleet']['name']
+    node = rclpy.node.Node(f'{fleet_name}_command_handle')
 
     # Enable sim time for testing offline
     if args.use_sim_time:
         param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
         node.set_parameters([param])
 
-    adapter, fleet_handle, robots = initialize_fleet(
+    adapter = initialize_fleet(
         config_yaml,
         nav_graph_path,
         node,

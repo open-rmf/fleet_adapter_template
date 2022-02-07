@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from rclpy.duration import Duration
 
 import rmf_adapter as adpt
 import rmf_adapter.plan as plan
@@ -29,8 +30,6 @@ import time
 
 from datetime import timedelta
 
-from .RobotClientAPI import RobotAPI
-
 
 # States for RobotCommandHandle's state machine used when guiding robot along
 # a new path
@@ -43,27 +42,28 @@ class RobotState(enum.IntEnum):
 class RobotCommandHandle(adpt.RobotCommandHandle):
     def __init__(self,
                  name,
+                 fleet_name,
                  config,
                  node,
                  graph,
                  vehicle_traits,
                  transforms,
                  map_name,
-                 initial_waypoint,
-                 initial_orientation,
+                 start,
+                 position,
                  charger_waypoint,
                  update_frequency,
-                 adapter):
+                 adapter,
+                 api):
         adpt.RobotCommandHandle.__init__(self)
         self.name = name
+        self.fleet_name = fleet_name
         self.config = config
         self.node = node
         self.graph = graph
         self.vehicle_traits = vehicle_traits
         self.transforms = transforms
         self.map_name = map_name
-        self.initial_waypoint = initial_waypoint
-        self.initial_orientation = initial_orientation
         # Get the index of the charger waypoint
         waypoint = self.graph.find_waypoint(charger_waypoint)
         assert waypoint, f"Charger waypoint {charger_waypoint} \
@@ -73,8 +73,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self.update_frequency = update_frequency
         self.update_handle = None  # RobotUpdateHandle
         self.battery_soc = 1.0
-        self.api = None
-        self.position = []  # (x,y,theta) in RMF coordinates (meters, radians)
+        self.api = api
+        self.position = position  # (x,y,theta) in RMF coordinates (meters, radians)
         self.initialized = False
         self.state = RobotState.IDLE
         self.dock_name = ""
@@ -105,48 +105,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self._dock_thread = None
         self._quit_dock_event = threading.Event()
 
-        # Establish connection with the robot
-        self.api = RobotAPI(
-            self.config['base_url'],
-            self.config['user'],
-            self.config['password'])
-        assert self.api.connected, "Unable to connect to Robot API server"
-
-        self.position = self.get_position()  # RMF coordinates
-        assert len(
-            self.position) > 2, "Unable to get current location of the robot"
         self.node.get_logger().info(
             f"The robot is starting at: [{self.position[0]:.2f}, "
             f"{self.position[1]:.2f}, {self.position[2]:.2f}]")
-        # Obtain StartSet for the robot
-        self.starts = []
-        time_now = self.adapter.now()
-        if (self.initial_waypoint is not None) and\
-                (self.initial_orientation is not None):
-            self.node.get_logger().info(
-                f"Using provided initial waypoint [{self.initial_waypoint}] "
-                f"and orientation [{self.initial_orientation:.2f}] to "
-                f"initialize starts for robot [{self.name}]")
-            # Get the waypoint index for initial_waypoint
-            initial_waypoint_index = self.graph.find_waypoint(
-                self.initial_waypoint).index
-            self.starts = [plan.Start(time_now,
-                                      initial_waypoint_index,
-                                      self.initial_orientation)]
-        else:
-            self.node.get_logger().info(
-                f"Running compute_plan_starts for robot:{self.name}")
-            self.starts = plan.compute_plan_starts(
-                self.graph,
-                self.map_name,
-                self.position,
-                time_now)
-
-        if self.starts is None or len(self.starts) == 0:
-            self.node.get_logger().error(
-                f"Unable to determine StartSet for {self.name}")
-            return
-        start = self.starts[0]
 
         # Update tracking variables
         if start.lane is not None:  # If the robot is on a lane
@@ -163,6 +124,12 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         self.initialized = True
 
+    def sleep_for(self, seconds):
+        goal_time =\
+          self.node.get_clock().now() + Duration(nanoseconds=1e9*seconds)
+        while (self.node.get_clock().now() <= goal_time):
+            time.sleep(0.001)
+
     def clear(self):
         with self._lock:
             self.requested_waypoints = []
@@ -176,9 +143,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         # Stop the robot. Tracking variables should remain unchanged.
         while True:
             self.node.get_logger().info("Requesting robot to stop...")
-            if self.api.stop():
+            if self.api.stop(self.name):
                 break
-            time.sleep(1.0)
+            self.sleep_for(0.1)
         if self._follow_path_thread is not None:
             self._quit_path_event.set()
             if self._follow_path_thread.is_alive():
@@ -229,7 +196,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     # IMPLEMENT YOUR CODE HERE #
                     # Ensure x, y, theta are in units that api.navigate() #
                     # ------------------------ #
-                    response = self.api.navigate([x, y, theta], self.map_name)
+                    response = self.api.navigate(self.name,
+                                                 [x, y, theta],
+                                                 self.map_name)
 
                     if response:
                         self.remaining_waypoints = self.remaining_waypoints[1:]
@@ -239,10 +208,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                             f"Robot {self.name} failed to navigate to "
                             f"[{x:.0f}, {y:.0f}, {theta:.0f}] coordinates. "
                             f"Retrying...")
-                        time.sleep(1.0)
+                        self.sleep_for(0.1)
 
                 elif self.state == RobotState.WAITING:
-                    time.sleep(1.0)
+                    self.sleep_for(0.1)
                     time_now = self.adapter.now()
                     with self._lock:
                         if self.target_waypoint is not None:
@@ -258,10 +227,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                         self.path_index, timedelta(seconds=0.0))
 
                 elif self.state == RobotState.MOVING:
-                    time.sleep(1.0)
+                    self.sleep_for(0.1)
                     # Check if we have reached the target
                     with self._lock:
-                        if (self.api.navigation_completed()):
+                        if (self.api.navigation_completed(self.name)):
                             self.node.get_logger().info(
                                 f"Robot [{self.name}] has reached its target "
                                 f"waypoint")
@@ -299,7 +268,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                         # remaining travel duration, replace the API call
                         # below with an estimation
                         # ------------------------ #
-                        duration = self.api.navigation_remaining_duration()
+                        duration = self.api.navigation_remaining_duration(self.name)
                         if self.path_index is not None:
                             self.next_arrival_estimator(
                                 self.path_index, timedelta(seconds=duration))
@@ -341,23 +310,23 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             # Request the robot to start the relevant process
             self.node.get_logger().info(
                 f"Requesting robot {self.name} to dock at {self.dock_name}")
-            self.api.start_process(self.dock_name, self.map_name)
+            self.api.start_process(self.name, self.dock_name, self.map_name)
 
             with self._lock:
                 self.on_waypoint = None
                 self.on_lane = None
-            time.sleep(1.0)
+            self.sleep_for(0.1)
             # ------------------------ #
             # IMPLEMENT YOUR CODE HERE #
             # With whatever logic you need for docking #
             # ------------------------ #
-            while (not self.api.docking_completed()):
+            while (not self.api.docking_completed(self.name)):
                 # Check if we need to abort
                 if self._quit_dock_event.is_set():
                     self.node.get_logger().info("Aborting docking")
                     return
                 self.node.get_logger().info("Robot is docking...")
-                time.sleep(1.0)
+                self.sleep_for(0.1)
 
             with self._lock:
                 self.on_waypoint = self.dock_waypoint_index
@@ -371,7 +340,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
     def get_position(self):
         ''' This helper function returns the live position of the robot in the
         RMF coordinate frame'''
-        position = self.api.position()
+        position = self.api.position(self.name)
         if position is not None:
             x, y = self.transforms['robot_to_rmf'].transform(
                 [position[0], position[1]])
@@ -394,7 +363,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             return self.position
 
     def get_battery_soc(self):
-        battery_soc = self.api.battery_soc()
+        battery_soc = self.api.battery_soc(self.name)
         if battery_soc is not None:
             return battery_soc
         else:
@@ -448,7 +417,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                 self.update_handle.update_off_grid_position(
                     self.position, self.dock_waypoint_index)
             # if robot is merging into a waypoint
-            elif (self.target_waypoint is not None and \
+            elif (self.target_waypoint is not None and
                 self.target_waypoint.graph_index is not None):
                 self.update_handle.update_off_grid_position(
                     self.position, self.target_waypoint.graph_index)
