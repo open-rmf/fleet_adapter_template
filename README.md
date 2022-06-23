@@ -48,7 +48,15 @@ The `config.yaml` file contains important parameters for setting up the fleet ad
 
 Run the command below while passing the paths to the configuration file and navigation graph that this fleet operates on.
 
+The websocket server URI should also be passed as a parameter in this command inorder to publish task statuses to the rest of the RMF entities.
+
 ```bash
+#minimal required parameters
 ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH
 
+#Usage with the websocket uri
+ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s SERVER_URI
+
+#e.g.
+ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s ws://localhost:7878
 ```
