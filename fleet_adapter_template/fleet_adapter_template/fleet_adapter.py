@@ -42,7 +42,7 @@ from .RobotClientAPI import RobotAPI
 # ------------------------------------------------------------------------------
 
 
-def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time):
+def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time, server_uri):
     # Profile and traits
     fleet_config = config_yaml['rmf_fleet']
     profile = traits.Profile(geometry.make_final_convex_circle(
@@ -91,7 +91,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time):
     adapter.start()
     time.sleep(1.0)
 
-    fleet_handle = adapter.add_fleet(fleet_name, vehicle_traits, nav_graph)
+    fleet_handle = adapter.add_fleet(fleet_name, vehicle_traits, nav_graph, server_uri)
 
     if not fleet_config['publish_fleet_state']:
         fleet_handle.fleet_state_publish_period(None)
@@ -282,6 +282,8 @@ def main(argv=sys.argv):
                         help="Path to the config.yaml file")
     parser.add_argument("-n", "--nav_graph", type=str, required=True,
                         help="Path to the nav_graph for this fleet adapter")
+    parser.add_argument("-s", "--server_uri", type=str, required=False, default="",
+                    help="URI of the api server to transmit state and task information.")
     parser.add_argument("--use_sim_time", action="store_true",
                         help='Use sim time, default: false')
     args = parser.parse_args(args_without_ros[1:])
@@ -303,11 +305,17 @@ def main(argv=sys.argv):
         param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
         node.set_parameters([param])
 
+     if args.server_uri == "":
+        server_uri = None
+    else:
+        server_uri = args.server_uri
+
     adapter = initialize_fleet(
         config_yaml,
         nav_graph_path,
         node,
-        args.use_sim_time)
+        args.use_sim_time,
+        server_uri)
 
     # Create executor for the command handle node
     rclpy_executor = rclpy.executors.SingleThreadedExecutor()
