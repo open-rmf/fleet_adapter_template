@@ -4,9 +4,9 @@
 rmf_fleet:
   name: "DeliveryBot"
   fleet_manager:
-    prefix: "http://127.0.0.1:8000"
-    user: "some_user"
-    password: "some_password"
+    prefix: "ws://YOUR_TEMI_IP:8175"
+#    user: "some_user"
+#    password: "some_password"
   limits:
     linear: [0.4, 0.2] # velocity, acceleration
     angular: [0.3, 0.35] # velocity, acceleration
