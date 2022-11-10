@@ -4,7 +4,7 @@
 rmf_fleet:
   name: "DeliveryBot"
   fleet_manager:
-    prefix: "ws://YOUR_TEMI_IP:8175"
+    prefix: "ws://172.16.3.168:8175"
 #    user: "some_user"
 #    password: "some_password"
   limits:
