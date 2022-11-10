@@ -18,6 +18,7 @@ import yaml
 import nudged
 import time
 import threading
+from functools import partial
 
 import rclpy
 import rclpy.node
@@ -32,10 +33,9 @@ import rmf_adapter.plan as plan
 
 from rmf_task_msgs.msg import TaskProfile, TaskType
 
-from functools import partial
 
-from .RobotCommandHandle import RobotCommandHandle
-from .RobotClientAPI import RobotAPI
+from .TemiCommandHandle import RobotCommandHandle
+from .TemiClientAPI import TemiAPI
 
 # ------------------------------------------------------------------------------
 # Helper functions
@@ -163,7 +163,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time, server_uri
         cmd_handle.update_handle = update_handle
 
     # Initialize robot API for this fleet
-    api = RobotAPI(
+    api = TemiAPI(
         fleet_config['fleet_manager']['prefix'])
 
     # Initialize robots for this fleet

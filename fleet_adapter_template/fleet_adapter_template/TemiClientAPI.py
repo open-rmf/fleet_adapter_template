@@ -25,7 +25,7 @@ import asyncio
 from temi import Temi
 
 
-class RobotAPI:
+class TemiAPI:
     # The constructor below accepts parameters typically required to submit
     # http requests. Users should modify the constructor as per the
     # requirements of their robot's API
