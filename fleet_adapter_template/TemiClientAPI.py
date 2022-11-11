@@ -60,7 +60,7 @@ class TemiAPI:
     #     # ------------------------ #
     #     return None
     #
-    def navigate(self, robot_name: str, pose, map_name: str):
+    async def navigate(self, robot_name: str, pose, map_name: str):
         """
         Request the robot to navigate to pose:[x,y,theta] where x, y and
         theta are in the robot's coordinate convention. This function
@@ -84,13 +84,13 @@ class TemiAPI:
     #     # ------------------------ #
     #     return False
     #
-    def stop(self, robot_name: str):
+    async def stop(self, robot_name: str):
         """
         Command the robot to stop.
         Return True if robot has successfully stopped. Else False
         """
         try:
-            self.temi.stopMovement().run()
+            await self.temi.stopMovement().run()
             return True
         except Exception as e:
             print(f"An error has occurred when stopping robot movement: {e}")
@@ -120,7 +120,7 @@ class TemiAPI:
     #     # ------------------------ #
     #     return False
     #
-    def battery_soc(self, robot_name: str):
+    async def battery_soc(self, robot_name: str):
         """
         Return the state of charge of the robot as a value between 0.0
         and 1.0. Else return None if any errors are encountered
