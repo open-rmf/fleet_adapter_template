@@ -1,0 +1,56 @@
+building_name: jtc
+levels:
+  L2_JTC:
+    lanes:
+    - - 0
+      - 1
+      - {is_bidirectional: false}
+    - - 1
+      - 2
+      - {is_bidirectional: false}
+    - - 3
+      - 4
+      - {is_bidirectional: false}
+    - - 4
+      - 5
+      - {is_bidirectional: false}
+    - - 2
+      - 3
+      - {is_bidirectional: false}
+    - - 5
+      - 6
+      - {}
+    - - 6
+      - 5
+      - {}
+    - - 5
+      - 7
+      - {is_bidirectional: false}
+    - - 7
+      - 0
+      - {is_bidirectional: false}
+    vertices:
+    - - 46.30952312516356
+      - -44.65822602861328
+      - {name: point_5}
+    - - 50.61808999114473
+      - -42.897583574928696
+      - {name: point_6}
+    - - 55.42767124080624
+      - -42.03873472258378
+      - {name: mid2}
+    - - 55.358341533245444
+      - -40.66923082862092
+      - {name: mid}
+    - - 50.383877356321086
+      - -41.58986753411134
+      - {name: point_3}
+    - - 45.854889992948536
+      - -43.32721557507589
+      - {name: point_2}
+    - - 43.97779853943879
+      - -41.90092866713609
+      - {is_charger: true, name: charging_point}
+    - - 42.23152481756072
+      - -47.18813763265804
+      - {name: point_1}
