@@ -52,11 +52,11 @@ The websocket server URI should also be passed as a parameter in this command in
 
 ```bash
 #minimal required parameters
-ros2 run fleet_adapter_temi fleet_adapter -c CONFIG_FILE -n NAV_GRAPH
+ros2 run temi_fleet_adapter_v2 fleet_adapter -c CONFIG_FILE -n NAV_GRAPH
 
 #Usage with the websocket uri
-ros2 run fleet_adapter_temi fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s SERVER_URI
+ros2 run temi_fleet_adapter_v2 fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s SERVER_URI
 
 #e.g.
-ros2 run fleet_adapter_temi fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s ws://localhost:7878
+ros2 run temi_fleet_adapter_v2 fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s ws://localhost:7878
 ```

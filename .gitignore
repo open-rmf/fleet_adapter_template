@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # Distribution / packaging
-fleet_adapter_temi/venv/bin/
+temi_fleet_adapter_v2/venv/bin/
 build/
 develop-eggs/
 dist/

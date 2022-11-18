@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 
 from rclpy.duration import Duration
 
@@ -64,6 +65,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self.vehicle_traits = vehicle_traits
         self.transforms = transforms
         self.map_name = map_name
+        print(self.map_name)
         # Get the index of the charger waypoint
         waypoint = self.graph.find_waypoint(charger_waypoint)
         assert waypoint, f"Charger waypoint {charger_waypoint} \
@@ -125,8 +127,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self.initialized = True
 
     def sleep_for(self, seconds):
-        goal_time =\
-          self.node.get_clock().now() + Duration(nanoseconds=1e9*seconds)
+        goal_time = \
+            self.node.get_clock().now() + Duration(nanoseconds=1e9 * seconds)
         while (self.node.get_clock().now() <= goal_time):
             time.sleep(0.001)
 
@@ -143,7 +145,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         # Stop the robot. Tracking variables should remain unchanged.
         while True:
             self.node.get_logger().info("Requesting robot to stop...")
-            if self.api.stop(self.name):
+            if asyncio.new_event_loop().run_until_complete(self.api.stop(self.name)):
                 break
             self.sleep_for(0.1)
         if self._follow_path_thread is not None:
@@ -154,10 +156,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             self.clear()
 
     def follow_new_path(
-        self,
-        waypoints,
-        next_arrival_estimator,
-        path_finished_callback):
+            self,
+            waypoints,
+            next_arrival_estimator,
+            path_finished_callback):
 
         self.stop()
         self._quit_path_event.clear()
@@ -173,9 +175,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         def _follow_path():
             target_pose = []
             while (
-                self.remaining_waypoints or
-                self.state == RobotState.MOVING or
-                self.state == RobotState.WAITING):
+                    self.remaining_waypoints or
+                    self.state == RobotState.MOVING or
+                    self.state == RobotState.WAITING):
                 # Check if we need to abort
                 if self._quit_path_event.is_set():
                     self.node.get_logger().info("Aborting previously followed "
@@ -191,7 +193,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     [x, y] = self.transforms["rmf_to_robot"].transform(
                         target_pose[:2])
                     theta = target_pose[2] + \
-                        self.transforms['orientation_offset']
+                            self.transforms['orientation_offset']
                     # ------------------------ #
                     # IMPLEMENT YOUR CODE HERE #
                     # Ensure x, y, theta are in units that api.navigate() #
@@ -230,12 +232,12 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     self.sleep_for(0.1)
                     # Check if we have reached the target
                     with self._lock:
-                        if (self.api.navigation_completed(self.name)):
+                        if self.api.navigation_completed(self.name):
                             self.node.get_logger().info(
                                 f"Robot [{self.name}] has reached its target "
                                 f"waypoint")
                             self.state = RobotState.WAITING
-                            if (self.target_waypoint.graph_index is not None):
+                            if self.target_waypoint.graph_index is not None:
                                 self.on_waypoint = \
                                     self.target_waypoint.graph_index
                                 self.last_known_waypoint_index = \
@@ -252,12 +254,12 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                 # The robot may either be on the previous
                                 # waypoint or the target one
                                 if self.target_waypoint.graph_index is not \
-                                    None and self.dist(self.position, target_pose) < 0.5:
+                                        None and self.dist(self.position, target_pose) < 0.5:
                                     self.on_waypoint = self.target_waypoint.graph_index
                                 elif self.last_known_waypoint_index is not \
-                                    None and self.dist(
+                                        None and self.dist(
                                     self.position, self.graph.get_waypoint(
-                                      self.last_known_waypoint_index).location) < 0.5:
+                                        self.last_known_waypoint_index).location) < 0.5:
                                     self.on_waypoint = self.last_known_waypoint_index
                                 else:
                                     self.on_lane = None  # update_off_grid()
@@ -268,7 +270,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                         # remaining travel duration, replace the API call
                         # below with an estimation
                         # ------------------------ #
-                        duration = self.api.navigation_remaining_duration(self.name)
+                        duration = asyncio.new_event_loop().run_until_complete(self.api.navigation_remaining_duration(self.name))
                         if self.path_index is not None:
                             self.next_arrival_estimator(
                                 self.path_index, timedelta(seconds=duration))
@@ -303,7 +305,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
         # Get the waypoint that the robot is trying to dock into
         dock_waypoint = self.graph.find_waypoint(self.dock_name)
-        assert(dock_waypoint)
+        assert (dock_waypoint)
         self.dock_waypoint_index = dock_waypoint.index
 
         def _dock():
@@ -345,7 +347,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             x, y = self.transforms['robot_to_rmf'].transform(
                 [position[0], position[1]])
             theta = math.radians(position[2]) - \
-                self.transforms['orientation_offset']
+                    self.transforms['orientation_offset']
             # ------------------------ #
             # IMPLEMENT YOUR CODE HERE #
             # Ensure x, y are in meters and theta in radians #
@@ -418,7 +420,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     self.position, self.dock_waypoint_index)
             # if robot is merging into a waypoint
             elif (self.target_waypoint is not None and
-                self.target_waypoint.graph_index is not None):
+                  self.target_waypoint.graph_index is not None):
                 self.update_handle.update_off_grid_position(
                     self.position, self.target_waypoint.graph_index)
             else:  # if robot is lost
@@ -457,9 +459,9 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
 
     def dist(self, A, B):
         ''' Euclidian distance between A(x,y) and B(x,y)'''
-        assert(len(A) > 1)
-        assert(len(B) > 1)
-        return math.sqrt((A[0] - B[0])**2 + (A[1] - B[1])**2)
+        assert (len(A) > 1)
+        assert (len(B) > 1)
+        return math.sqrt((A[0] - B[0]) ** 2 + (A[1] - B[1]) ** 2)
 
     def get_remaining_waypoints(self, waypoints: list):
         '''
@@ -467,7 +469,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         of the waypoint and the waypoint present in waypoints. This function
         may be modified if waypoints in a path need to be filtered.
         '''
-        assert(len(waypoints) > 0)
+        assert (len(waypoints) > 0)
         remaining_waypoints = []
 
         for i in range(len(waypoints)):

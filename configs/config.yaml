@@ -2,11 +2,9 @@
 # RMF Fleet parameters
 
 rmf_fleet:
-  name: "DeliveryBot"
+  name: "Temi"
   fleet_manager:
-    prefix: "ws://172.16.3.168:8175"
-#    user: "some_user"
-#    password: "some_password"
+    prefix: "ws://172.16.3.55:8177"
   limits:
     linear: [0.4, 0.2] # velocity, acceleration
     angular: [0.3, 0.35] # velocity, acceleration
@@ -42,19 +40,19 @@ robots:
   # Here the user is expected to append the configuration for each robot in the
   # fleet.
   # Configuration for first robot in this fleet
-  deliverybot1:
+  temi_1:
     robot_config:
       max_delay: 10.0 # allowed seconds of delay of the current itinerary before it gets interrupted and replanned
     rmf_config:
       robot_state_update_frequency: 0.5
       start:
-        map_name: "L1"
+        map_name: 'L2_JTC'
         # waypoint: "charger_deliverybot1" # Optional
         # orientation: 0.0 # Optional, radians
-        waypoint: null
-        orientation: null
+        waypoint: "point_2" # Optional
+        orientation: 1.58 # Optional, radians
       charger:
-        waypoint: "charger_deliverybot1"
+        waypoint: "charging_point"
   # Configuration for the second robot in this fleet if there is a second robot
   # Uncomment if more than one robot exists.
   # deliverybot2:
@@ -74,12 +72,17 @@ robots:
 # TRANSFORM CONFIG =============================================================
 # For computing transforms between Robot and RMF coordinate systems
 
+#home base
+#wooden area
+#data room
+#toilet
+
 reference_coordinates:
-  rmf: [[20.33, -3.156],
-        [8.908, -2.57],
-        [13.02, -3.601],
-        [21.93, -4.124]]
-  robot: [[59, 399],
-        [57, 172],
-        [68, 251],
-        [75, 429]]
+  rmf: [[43.12, -41.83],
+        [57.94, -43.35],
+        [74.2, -45.25],
+        [76.44, -69.14]]
+  robot: [[0.000, 0.000],
+         [10.868, 11.0171],
+         [24.0287, 24.2614],
+         [46.1643, 9.9464]]

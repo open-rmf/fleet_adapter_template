@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import asyncio
 import sys
 import argparse
 import yaml
@@ -91,7 +91,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time, server_uri
     adapter.start()
     time.sleep(1.0)
 
-    fleet_handle = adapter.add_fleet(fleet_name, vehicle_traits, nav_graph, server_uri)
+    fleet_handle = adapter.add_fleet(fleet_name, vehicle_traits, nav_graph)
 
     if not fleet_config['publish_fleet_state']:
         fleet_handle.fleet_state_publish_period(None)
@@ -176,7 +176,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time, server_uri
             time.sleep(0.2)
             for robot_name in list(missing_robots.keys()):
                 node.get_logger().debug(f"Connecting to robot: {robot_name}")
-                position = api.position(robot_name)
+                position = asyncio.new_event_loop().run_until_complete(api.position(robot_name))
                 if position is None:
                     continue
                 if len(position) > 2:
