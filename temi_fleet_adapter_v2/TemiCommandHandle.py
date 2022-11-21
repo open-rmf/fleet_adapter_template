@@ -65,7 +65,6 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self.vehicle_traits = vehicle_traits
         self.transforms = transforms
         self.map_name = map_name
-        print(self.map_name)
         # Get the index of the charger waypoint
         waypoint = self.graph.find_waypoint(charger_waypoint)
         assert waypoint, f"Charger waypoint {charger_waypoint} \
@@ -124,6 +123,10 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             1.0 / self.update_frequency,
             self.update)
 
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        # loop.run_forever()
+
         self.initialized = True
 
     def sleep_for(self, seconds):
@@ -145,7 +148,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         # Stop the robot. Tracking variables should remain unchanged.
         while True:
             self.node.get_logger().info("Requesting robot to stop...")
-            if asyncio.new_event_loop().run_until_complete(self.api.stop(self.name)):
+            if self.api.stop(self.name):
                 break
             self.sleep_for(0.1)
         if self._follow_path_thread is not None:
@@ -232,7 +235,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                     self.sleep_for(0.1)
                     # Check if we have reached the target
                     with self._lock:
-                        if self.api.navigation_completed(self.name):
+                        if asyncio.new_event_loop().run_until_complete(self.api.navigation_completed(self.name)):
                             self.node.get_logger().info(
                                 f"Robot [{self.name}] has reached its target "
                                 f"waypoint")
@@ -264,13 +267,8 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
                                 else:
                                     self.on_lane = None  # update_off_grid()
                                     self.on_waypoint = None
-                        # ------------------------ #
-                        # IMPLEMENT YOUR CODE HERE #
-                        # If your robot does not have an API to report the
-                        # remaining travel duration, replace the API call
-                        # below with an estimation
-                        # ------------------------ #
-                        duration = asyncio.new_event_loop().run_until_complete(self.api.navigation_remaining_duration(self.name))
+                        duration = asyncio.get_event_loop().run_in_executor(
+                            self.api.navigation_remaining_duration(self.name))
                         if self.path_index is not None:
                             self.next_arrival_estimator(
                                 self.path_index, timedelta(seconds=duration))
@@ -312,7 +310,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             # Request the robot to start the relevant process
             self.node.get_logger().info(
                 f"Requesting robot {self.name} to dock at {self.dock_name}")
-            self.api.start_process(self.name, self.dock_name, self.map_name)
+            # self.api.start_process(self.name, self.dock_name, self.map_name)
 
             with self._lock:
                 self.on_waypoint = None
@@ -322,7 +320,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             # IMPLEMENT YOUR CODE HERE #
             # With whatever logic you need for docking #
             # ------------------------ #
-            while (not self.api.docking_completed(self.name)):
+            while not self.api.docking_completed(self.name):
                 # Check if we need to abort
                 if self._quit_dock_event.is_set():
                     self.node.get_logger().info("Aborting docking")
@@ -340,18 +338,15 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
         self._dock_thread.start()
 
     def get_position(self):
-        ''' This helper function returns the live position of the robot in the
-        RMF coordinate frame'''
-        position = self.api.position(self.name)
+        """ This helper function returns the live position of the robot in the
+        RMF coordinate frame"""
+        # position = self.api.getPosition(self.name)
+        position = asyncio.new_event_loop().run_until_complete(self.api.getPosition(self.name))
         if position is not None:
             x, y = self.transforms['robot_to_rmf'].transform(
                 [position[0], position[1]])
             theta = math.radians(position[2]) - \
                     self.transforms['orientation_offset']
-            # ------------------------ #
-            # IMPLEMENT YOUR CODE HERE #
-            # Ensure x, y are in meters and theta in radians #
-            # ------------------------ #
             # Wrap theta between [-pi, pi]. Else arrival estimate will
             # assume robot has to do full rotations and delay the schedule
             if theta > np.pi:
@@ -365,7 +360,7 @@ class RobotCommandHandle(adpt.RobotCommandHandle):
             return self.position
 
     def get_battery_soc(self):
-        battery_soc = self.api.battery_soc(self.name)
+        battery_soc = asyncio.new_event_loop().run_until_complete(self.api.battery_soc(self.name))
         if battery_soc is not None:
             return battery_soc
         else:

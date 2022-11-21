@@ -4,7 +4,7 @@
 rmf_fleet:
   name: "Temi"
   fleet_manager:
-    prefix: "ws://172.16.3.55:8177"
+    prefix: "ws://172.16.2.82:8178"
   limits:
     linear: [0.4, 0.2] # velocity, acceleration
     angular: [0.3, 0.35] # velocity, acceleration

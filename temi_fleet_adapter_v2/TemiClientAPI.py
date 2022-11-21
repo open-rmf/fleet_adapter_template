@@ -55,7 +55,7 @@ class TemiAPI:
 
         return True
 
-    async def position(self, robot_name: str):
+    async def getPosition(self, robot_name: str):
         """
         Return [x, y, theta] expressed in the robot's coordinate frame or
             None if any errors are encountered
@@ -87,18 +87,6 @@ class TemiAPI:
             print(f"An error has occurred during navigation: {e}")
             return False
 
-    # def start_process(self, robot_name: str, process: str, map_name: str):
-    #     """
-    #     Request the robot to begin a process. This is specific to the robot
-    #     and the use case. For example, load/unload a cart for Deliverybot
-    #     or begin cleaning a zone for a cleaning robot.
-    #     Return True if the robot has accepted the request, else False
-    #     """
-    #     # ------------------------ #
-    #     # IMPLEMENT YOUR CODE HERE #
-    #     # ------------------------ #
-    #     return False
-
     async def stop(self, robot_name: str):
         """
         Command the robot to stop.
@@ -107,6 +95,17 @@ class TemiAPI:
         try:
             await self.temi.stopMovement().run()
             return True
+        except Exception as e:
+            print(f"An error has occurred when stopping robot movement: {e}")
+            return False
+
+    async def docking_completed(self, robot_name: str):
+        """
+        Check if robot reached home base.
+        Return True if robot has successfully docked. Else False
+        """
+        try:
+            return await self.temi.checkIfDockingCompleted().run()
         except Exception as e:
             print(f"An error has occurred when stopping robot movement: {e}")
             return False
@@ -122,14 +121,30 @@ class TemiAPI:
         except Exception as e:
             print(f"An error has occurred when retrieving remaining robot duration: {e}")
 
-    # def navigation_completed(self, robot_name: str):
-    #     ''' Return True if the robot has successfully completed its previous
-    #         navigation request. Else False.'''
+    async def navigation_completed(self, robot_name: str):
+        """
+        Return True if the robot has successfully completed its previous
+        navigation request. Else False.
+        """
+        try:
+            response = await self.temi.checkIfNavigationCompleted().run()
+            return response.get('completedNavigation') == 'True'
+        except Exception as e:
+            print(f"An error has occurred when checking : {e}")
+            return False
+
+    # def start_process(self, robot_name: str, process: str, map_name: str):
+    #     """
+    #     Request the robot to begin a process. This is specific to the robot
+    #     and the use case. For example, load/unload a cart for Deliverybot
+    #     or begin cleaning a zone for a cleaning robot.
+    #     Return True if the robot has accepted the request, else False
+    #     """
     #     # ------------------------ #
     #     # IMPLEMENT YOUR CODE HERE #
     #     # ------------------------ #
     #     return False
-    #
+
     # def process_completed(self, robot_name: str):
     #     ''' Return True if the robot has successfully completed its previous
     #         process request. Else False.'''
@@ -148,7 +163,7 @@ class TemiAPI:
             # "BatteryData(level=95, isCharging=false)"
             battery_data = await self.temi.getBatteryData().run()
 
-            # Example of split_response:
+            # Example of response:
             # ['BatteryData(level', '95', '', 'isCharging', 'false)']
             split_response = re.split('[= ,]', battery_data.get('batteryData'))
 
