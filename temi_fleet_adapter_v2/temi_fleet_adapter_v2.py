@@ -176,7 +176,7 @@ def initialize_fleet(config_yaml, nav_graph_path, node, use_sim_time, server_uri
             time.sleep(0.2)
             for robot_name in list(missing_robots.keys()):
                 node.get_logger().debug(f"Connecting to robot: {robot_name}")
-                position = asyncio.new_event_loop().run_until_complete(api.getPosition(robot_name))
+                position = api.getPosition(robot_name)
                 if position is None:
                     continue
                 if len(position) > 2:

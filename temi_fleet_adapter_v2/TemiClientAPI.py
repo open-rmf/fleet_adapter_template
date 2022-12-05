@@ -21,9 +21,8 @@
     these functions.
 '''
 
-import asyncio
-import re
-from temi import Temi
+import time
+import pytemi as temi
 
 
 class TemiAPI:
@@ -33,47 +32,41 @@ class TemiAPI:
     # requirements of their robot's API
 
     def __init__(self, prefix: str):
-        self.prefix = prefix
-        self.connected = False
-        self.temi = None
-        # Test connectivity
-        connected = asyncio.get_event_loop().run_until_complete(self.check_connection())
-        if connected:
-            print("Successfully able to query API server")
-            self.connected = True
-        else:
-            print("Unable to query API server")
+        # parameters
+        # MQTT_HOST = "test.mosquitto.org"
+        MQTT_HOST = "broker.mqttdashboard.com"
+        MQTT_PORT = 1883
+        TEMI_SERIAL = "00120223188"
 
-    async def check_connection(self):
+        # connect to the MQTT broker
+        mqtt_client = temi.connect(MQTT_HOST, MQTT_PORT)
+
+        # create robot object
+        self.robot = temi.Robot(mqtt_client, TEMI_SERIAL)
+
+    def check_connection(self):
         """
         Return True if connection to the robot API server is successful
         """
 
-        self.temi = Temi(self.prefix)
-        await self.temi.connect()
-        await self.temi.speak(sentence='Hello!').run()
+        self.robot.tts(text='Hello!')
+        time.sleep(0.1)
 
         return True
 
-    async def getPosition(self, robot_name: str):
+    def getPosition(self, robot_name: str):
         """
         Return [x, y, theta] expressed in the robot's coordinate frame or
             None if any errors are encountered
         """
         try:
-            skidjoy_response = await self.temi.skidJoy(x=float(0.001), y=float(0.001)).run()
-
-            # Example of split_response:
-            # ['Position(x', '1.3517', '', 'y', '-5.1696', '', 'yaw', '3.0173', '', 'tiltAngle', '51)']
-            split_response = re.split('[= ,]', skidjoy_response.get('position'))
-
-            return [float(split_response[1]), float(split_response[4]), float(split_response[7])]
+            return list(self.robot.currentPosition.values())[:3]
 
         except Exception as e:
             print(f"An error has occurred when getting robot position: {e}")
             return None
 
-    async def navigate(self, robot_name: str, pose, map_name: str):
+    def navigate(self, robot_name: str, pose, map_name: str):
         """
         Request the robot to navigate to pose:[x,y,theta] where x, y and
         theta are in the robot's coordinate convention. This function
@@ -81,54 +74,55 @@ class TemiAPI:
         else False
         """
         try:
-            await self.temi.gotoPosition(x=pose[0], y=pose[1], yaw=pose[2], tiltAngle=22).run()
+            self.robot.goToPosition(x=pose[0], y=pose[1], yaw=pose[2], tiltAngle=22)
+            time.sleep(2)
             return True
         except Exception as e:
             print(f"An error has occurred during navigation: {e}")
             return False
 
-    async def stop(self, robot_name: str):
+    def stop(self, robot_name: str):
         """
         Command the robot to stop.
         Return True if robot has successfully stopped. Else False
         """
         try:
-            await self.temi.stopMovement().run()
+            self.robot.stop()
+            time.sleep(1)
             return True
         except Exception as e:
             print(f"An error has occurred when stopping robot movement: {e}")
             return False
 
-    async def docking_completed(self, robot_name: str):
+    def docking_completed(self, robot_name: str):
         """
         Check if robot reached home base.
         Return True if robot has successfully docked. Else False
         """
         try:
-            return await self.temi.checkIfDockingCompleted().run()
+            return self.robot.checkIfDockingCompleted()
         except Exception as e:
             print(f"An error has occurred when stopping robot movement: {e}")
             return False
 
-    async def navigation_remaining_duration(self, robot_name: str):
+    def navigation_remaining_duration(self, robot_name: str):
         """
         Return the number of seconds remaining for the robot to reach its
         destination
         """
         try:
-            duration_response = await self.temi.getRemainingDuration().run()
-            return float(duration_response.get('duration'))
+            return float(self.robot.durationToDestination)
         except Exception as e:
             print(f"An error has occurred when retrieving remaining robot duration: {e}")
 
-    async def navigation_completed(self, robot_name: str):
+    def navigation_completed(self, robot_name: str):
         """
         Return True if the robot has successfully completed its previous
         navigation request. Else False.
         """
         try:
-            response = await self.temi.checkIfNavigationCompleted().run()
-            return response.get('completedNavigation') == 'True'
+            return self.robot.navigationCompleted()
+
         except Exception as e:
             print(f"An error has occurred when checking : {e}")
             return False
@@ -153,22 +147,13 @@ class TemiAPI:
     #     # ------------------------ #
     #     return False
     #
-    async def battery_soc(self, robot_name: str):
+    def battery_soc(self, robot_name: str):
         """
         Return the state of charge of the robot as a value between 0.0
         and 1.0. Else return None if any errors are encountered
         """
         try:
-            # Example of battery_data.get('batteryData'):
-            # "BatteryData(level=95, isCharging=false)"
-            battery_data = await self.temi.getBatteryData().run()
-
-            # Example of response:
-            # ['BatteryData(level', '95', '', 'isCharging', 'false)']
-            split_response = re.split('[= ,]', battery_data.get('batteryData'))
-
-            battery_level = float(split_response[1])
-            return battery_level / 100.0
+            return self.robot.battery['percentage']
 
         except Exception as e:
             print(f"An error has occurred when obtaining the battery level: {e}")
