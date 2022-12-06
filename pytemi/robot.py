@@ -55,7 +55,6 @@ def _on_durationToDestination(client, userdata, msg):
     print("[{}] [SUB] [DURATION TO DESTINATION] {}".format(now(), str(msg.payload)))
     userdata["durationToDestination"] = json.loads(msg.payload)
 
-
 def _on_receiveTestConnection(client, userdata, msg):
     print("[{}] [SUB] [TEST RECEIVE MESSAGE] {}".format(now(), str(msg.payload)))
 
@@ -74,7 +73,7 @@ class Robot:
         self.state = {"locations": ["home base"], "battery": {},
                       "goto": {"location": "home base", "status": "complete"}, "user": {},
                       "currentPosition": {"x": 0.0, "y": 0.0, "yaw": 0.0, "tiltAngle": 50},
-                      "durationToDestination": 0.0}
+                      "durationToDestination": {'duration': 0.0}}
         self.client.user_data_set(self.state)
 
         # attach subscription callbacks
@@ -102,9 +101,10 @@ class Robot:
 
         # call method to initialize battery information
         self.get_battery_data()
-        time.sleep(0.5)
+        time.sleep(1)
+        print('GOT DATA', self.battery)
         self.get_current_position()
-        time.sleep(0.5)
+        time.sleep(1)
 
     def checkIfDockingCompleted(self):
         return self.state == "complete" and self.currentLocation == "home base"

@@ -33,9 +33,10 @@ class TemiAPI:
 
     def __init__(self, prefix: str):
         # parameters
-        # MQTT_HOST = "test.mosquitto.org"
-        MQTT_HOST = "broker.mqttdashboard.com"
-        MQTT_PORT = 1883
+        MQTT_HOST = "175.41.184.236"
+        MQTT_PORT = 1884
+        # MQTT_HOST = "broker.mqttdashboard.com"
+        # MQTT_PORT = 1883
         TEMI_SERIAL = "00120223188"
 
         # connect to the MQTT broker
@@ -111,7 +112,7 @@ class TemiAPI:
         destination
         """
         try:
-            return float(self.robot.durationToDestination)
+            return float(self.robot.durationToDestination.get('duration'))
         except Exception as e:
             print(f"An error has occurred when retrieving remaining robot duration: {e}")
 
