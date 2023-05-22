@@ -28,13 +28,14 @@ rmf_fleet:
     power: 760.0 # W
   recharge_threshold: 0.20 # Battery level below which robots in this fleet will not operate
   recharge_soc: 1.0 # Battery level to which robots in this fleet should be charged up to during recharging tasks
-  publish_fleet_state: True
+  publish_fleet_state:  10.0 # Publish frequency for fleet state, ensure that it is same as robot_state_update_frequency
   account_for_battery_drain: True
   task_capabilities: # Specify the types of RMF Tasks that robots in this fleet are capable of performing
     loop: True
     delivery: False
     clean: False
     finishing_request: "nothing" # [park, charge, nothing]
+    action: [] # Optional, list of custom actions that the fleet can perform
 
 # DeliveryBot CONFIG =================================================================
 
@@ -43,8 +44,6 @@ robots:
   # fleet.
   # Configuration for first robot in this fleet
   deliverybot1:
-    robot_config:
-      max_delay: 10.0 # allowed seconds of delay of the current itinerary before it gets interrupted and replanned
     rmf_config:
       robot_state_update_frequency: 0.5
       start:
@@ -58,8 +57,6 @@ robots:
   # Configuration for the second robot in this fleet if there is a second robot
   # Uncomment if more than one robot exists.
   # deliverybot2:
-  #   robot_config:
-  #     max_delay: 10.0 # allowed seconds of delay of the current itinerary before it gets interrupted and replanned
   #   rmf_config:
   #     robot_state_update_frequency: 0.5
   #     start:
@@ -74,6 +71,7 @@ robots:
 # TRANSFORM CONFIG =============================================================
 # For computing transforms between Robot and RMF coordinate systems
 
+# Optional
 reference_coordinates:
   rmf: [[20.33, -3.156],
         [8.908, -2.57],
