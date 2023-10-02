@@ -26,49 +26,47 @@ class RobotAPI:
     # The constructor below accepts parameters typically required to submit
     # http requests. Users should modify the constructor as per the
     # requirements of their robot's API
-    def __init__(self, prefix: str, user: str, password: str):
-        self.prefix = prefix
-        self.user = user
-        self.password = password
-        self.connected = False
-        # Test connectivity
-        connected = self.check_connection()
-        if connected:
-            print("Successfully able to query API server")
-            self.connected = True
-        else:
-            print("Unable to query API server")
+    def __init__(self, config_yaml):
+        self.prefix = config_yaml['prefix']
+        self.user = config_yaml['user']
+        self.password = config_yaml['password']
+        self.timeout = 5.0
+        self.debug = False
 
     def check_connection(self):
-        ''' Return True if connection to the robot API server is successful'''
+        ''' Return True if connection to the robot API server is successful '''
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return True
 
-    def position(self, robot_name: str):
-        ''' Return [x, y, theta] expressed in the robot's coordinate frame or
-            None if any errors are encountered'''
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
-        return None
-
-    def navigate(self, robot_name: str, pose, map_name: str):
+    def navigate(
+        self,
+        robot_name: str,
+        pose,
+        map_name: str,
+        speed_limit=0.0
+    ):
         ''' Request the robot to navigate to pose:[x,y,theta] where x, y and
             and theta are in the robot's coordinate convention. This function
             should return True if the robot has accepted the request,
-            else False'''
+            else False '''
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
 
-    def start_process(self, robot_name: str, process: str, map_name: str):
+    def start_activity(
+        self,
+        robot_name: str,
+        activity: str,
+        label: str
+    ):
         ''' Request the robot to begin a process. This is specific to the robot
-            and the use case. For example, load/unload a cart for Deliverybot
-            or begin cleaning a zone for a cleaning robot.
-            Return True if the robot has accepted the request, else False'''
+        and the use case. For example, load/unload a cart for Deliverybot
+        or begin cleaning a zone for a cleaning robot.
+        Return True if process has started/is queued successfully, else
+        return False '''
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
@@ -76,40 +74,65 @@ class RobotAPI:
 
     def stop(self, robot_name: str):
         ''' Command the robot to stop.
-            Return True if robot has successfully stopped. Else False'''
+            Return True if robot has successfully stopped. Else False. '''
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
 
-    def navigation_remaining_duration(self, robot_name: str):
-        ''' Return the number of seconds remaining for the robot to reach its
-            destination'''
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
-        return 0.0
-
-    def navigation_completed(self, robot_name: str):
-        ''' Return True if the robot has successfully completed its previous
-            navigation request. Else False.'''
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
-        return False
-
-    def process_completed(self, robot_name: str):
-        ''' Return True if the robot has successfully completed its previous
-            process request. Else False.'''
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
-        return False
-
-    def battery_soc(self, robot_name: str):
-        ''' Return the state of charge of the robot as a value between 0.0
-            and 1.0. Else return None if any errors are encountered'''
+    def position(self, robot_name: str):
+        ''' Return [x, y, theta] expressed in the robot's coordinate frame or
+        None if any errors are encountered '''
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return None
+
+    def battery_soc(self, robot_name: str):
+        ''' Return the state of charge of the robot as a value between 0.0
+        and 1.0. Else return None if any errors are encountered. '''
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return None
+
+    def map(self, robot_name: str):
+        ''' Return the name of the map that the robot is currently on or
+        None if any errors are encountered. '''
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return None
+
+    def is_command_completed(self):
+        ''' Return True if the robot has completed its last command, else
+        return False. '''
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return False
+
+    def get_data(self, robot_name: str):
+        ''' Returns a RobotUpdateData for one robot if a name is given. Otherwise
+        return a list of RobotUpdateData for all robots. '''
+        map = self.map(robot_name)
+        position = self.position(robot_name)
+        battery_soc = self.battery_soc(robot_name)
+        if not (map is None or position is None or battery_soc is None):
+            return RobotUpdateData(robot_name, map, position, battery_soc)
+        return None
+
+
+class RobotUpdateData:
+    ''' Update data for a single robot. '''
+    def __init__(self,
+                 robot_name: str,
+                 map: str,
+                 position: list[float],
+                 battery_soc: float,
+                 requires_replan: bool | None = None):
+        self.robot_name = robot_name
+        self.position = position
+        self.map = map
+        self.battery_soc = battery_soc
+        self.requires_replan = requires_replan
