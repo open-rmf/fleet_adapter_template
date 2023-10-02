@@ -114,17 +114,14 @@ def main(argv=sys.argv):
     fleet_config.server_uri = server_uri
     fleet_handle = adapter.add_easy_fleet(fleet_config)
 
-    # Initialize robot API for this fleet
-    fleet_mgr_yaml = config_yaml['fleet_manager']
-    update_period = 1.0/config_yaml['rmf_fleet'].get(
-        'robot_state_update_frequency', 10.0
-    )
-    api = RobotAPI(fleet_mgr_yaml)
-
     # Configure the transforms between robot and RMF frames
     for level, coords in config_yaml['reference_coordinates'].items():
         tf = compute_transforms(level, coords, node)
         fleet_config.add_robot_coordinates_transformation(level, tf)
+
+    # Initialize robot API for this fleet
+    fleet_mgr_yaml = config_yaml['fleet_manager']
+    api = RobotAPI(fleet_mgr_yaml)
 
     robots = {}
     for robot_name in fleet_config.known_robots:
@@ -132,6 +129,10 @@ def main(argv=sys.argv):
         robots[robot_name] = RobotAdapter(
             robot_name, robot_config, node, api, fleet_handle
         )
+
+    update_period = 1.0/config_yaml['rmf_fleet'].get(
+        'robot_state_update_frequency', 10.0
+    )
 
     def update_loop():
         asyncio.set_event_loop(asyncio.new_event_loop())
