@@ -18,7 +18,7 @@ import yaml
 import time
 import threading
 import asyncio
-import math
+import nudged
 
 import rclpy
 import rclpy.node
@@ -28,17 +28,30 @@ from rclpy.duration import Duration
 import rmf_adapter
 from rmf_adapter import Adapter
 import rmf_adapter.easy_full_control as rmf_easy
+from rmf_adapter import Transformation
 
-from rmf_fleet_msgs.msg import LaneRequest, ClosedLanes, ModeRequest, RobotMode
+from .RobotClientAPI import RobotAPI
 
-from rclpy.qos import QoSProfile
-from rclpy.qos import QoSHistoryPolicy as History
-from rclpy.qos import QoSDurabilityPolicy as Durability
-from rclpy.qos import QoSReliabilityPolicy as Reliability
-from rclpy.qos import qos_profile_system_default
 
-from .RobotClientAPI import RobotAPI, RobotAPIResult
+# ------------------------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------------------------
+def compute_transforms(level, coords, node=None):
+    """Get transforms between RMF and robot coordinates."""
+    rmf_coords = coords['rmf']
+    robot_coords = coords['robot']
+    tf = nudged.estimate(rmf_coords, robot_coords)
+    if node:
+        mse = nudged.estimate_error(tf, rmf_coords, robot_coords)
+        node.get_logger().info(
+            f"Transformation error estimate for {level}: {mse}"
+        )
 
+    return Transformation(
+        tf.get_rotation(),
+        tf.get_scale(),
+        tf.get_translation()
+    )
 
 # ------------------------------------------------------------------------------
 # Main
@@ -56,6 +69,8 @@ def main(argv=sys.argv):
                         help="Path to the config.yaml file")
     parser.add_argument("-n", "--nav_graph", type=str, required=True,
                         help="Path to the nav_graph for this fleet adapter")
+    parser.add_argument("-s", "--server_uri", type=str, required=False, default="",
+                        help="URI of the api server to transmit state and task information.")
     parser.add_argument("-sim", "--use_sim_time", action="store_true",
                         help='Use sim time, default: false')
     args = parser.parse_args(args_without_ros[1:])
@@ -91,12 +106,10 @@ def main(argv=sys.argv):
     adapter.start()
     time.sleep(1.0)
 
-    node.declare_parameter('server_uri', '')
-    server_uri = node.get_parameter(
-        'server_uri'
-    ).get_parameter_value().string_value
-    if server_uri == '':
+    if args.server_uri == '':
         server_uri = None
+    else:
+        server_uri = args.server_uri
 
     fleet_config.server_uri = server_uri
     fleet_handle = adapter.add_easy_fleet(fleet_config)
@@ -107,6 +120,11 @@ def main(argv=sys.argv):
         'robot_state_update_frequency', 10.0
     )
     api = RobotAPI(fleet_mgr_yaml)
+
+    # Configure the transforms between robot and RMF frames
+    for level, coords in config_yaml['reference_coordinates'].items():
+        tf = compute_transforms(level, coords, node)
+        fleet_config.add_robot_coordinates_transformation(level, tf)
 
     robots = {}
     for robot_name in fleet_config.known_robots:
