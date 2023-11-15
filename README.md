@@ -1,5 +1,7 @@
 # fleet_adapter_template
 
+> Note: If you are using Open-RMF binaries from ROS 2 Humble or an older distribution, switch to the [humble](https://github.com/open-rmf/fleet_adapter_template/tree/humble) branch.
+
 The objective of this package is to serve as a reference or template for writing a python based `full_control` RMF fleet adapter.
 
 > Note: The implementation in this package is not the only way to write a `full_control` fleet adapter. It is only one such example that may be helpful for users to quickly integrate their fleets with RMF.
