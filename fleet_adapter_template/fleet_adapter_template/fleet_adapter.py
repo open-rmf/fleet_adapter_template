@@ -141,7 +141,7 @@ def main(argv=sys.argv):
 
             # Update all the robots in parallel using a thread pool
             update_jobs = []
-            for robot in robots.keys():
+            for robot in robots.values():
                 update_jobs.append(update_robot(robot))
 
             asyncio.get_event_loop().run_until_complete(
