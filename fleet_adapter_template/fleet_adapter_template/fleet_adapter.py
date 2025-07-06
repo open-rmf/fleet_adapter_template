@@ -261,6 +261,8 @@ def parallel(f):
 def update_robot(robot: RobotAdapter):
     data = robot.api.get_data(robot.name)
     if data is None:
+        robot.node.get_logger().warn(f"Unable to retrieve data of {robot.name}. "
+                                     "Skipping update...")
         return
 
     robot.node.get_logger().info(f'Converting Robot to RMF coordinates...')
