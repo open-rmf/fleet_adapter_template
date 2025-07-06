@@ -218,9 +218,13 @@ class RobotAdapter:
             f'on map [{destination.map}]'
         )
 
+        self.node.get_logger().info(f'Converting RMF to Robot coordinates...')
+        rmf_pos = destination.position
+        robot_pos = self.rmf_to_robot_transforms[destination.map].apply(rmf_pos)
+
         self.api.navigate(
             self.name,
-            destination.position,
+            robot_pos,
             destination.map,
             destination.speed_limit
         )
@@ -259,9 +263,13 @@ def update_robot(robot: RobotAdapter):
     if data is None:
         return
 
+    robot.node.get_logger().info(f'Converting Robot to RMF coordinates...')
+    robot_pos = data.position
+    rmf_pos = robot.rmf_to_robot_transforms[data.map].apply_inverse(robot_pos)
+
     state = rmf_easy.RobotState(
         data.map,
-        data.position,
+        rmf_pos,
         data.battery_soc
     )
 
