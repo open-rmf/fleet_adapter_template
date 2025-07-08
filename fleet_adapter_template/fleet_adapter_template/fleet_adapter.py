@@ -218,13 +218,9 @@ class RobotAdapter:
             f'on map [{destination.map}]'
         )
 
-        self.node.get_logger().info(f'Converting RMF to Robot coordinates...')
-        rmf_pos = destination.position
-        robot_pos = self.rmf_to_robot_transforms[destination.map].apply(rmf_pos)
-
         self.api.navigate(
             self.name,
-            robot_pos,
+            destination.position,
             destination.map,
             destination.speed_limit
         )
