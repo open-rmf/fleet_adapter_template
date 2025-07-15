@@ -188,12 +188,13 @@ class RobotAdapter:
 
     def update(self, state):
         activity_identifier = None
-        if self.execution:
+        execution = self.execution
+        if execution:  # use execution here instead of self.execution, otherwise the race condition might still happen
             if self.api.is_command_completed():
-                self.execution.finished()
-                self.execution = None
+                execution.finished()
+                execution = None
             else:
-                activity_identifier = self.execution.identifier
+                activity_identifier = execution.identifier
 
         self.update_handle.update(state, activity_identifier)
 
