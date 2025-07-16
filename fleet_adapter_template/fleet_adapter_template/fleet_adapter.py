@@ -227,7 +227,7 @@ class RobotAdapter:
         execution = self.execution
         if execution is not None:
             if execution.identifier.is_same(activity):
-                execution = None
+                self.execution = None
                 self.api.stop(self.name)
 
     def execute_action(self, category: str, description: dict, execution):
