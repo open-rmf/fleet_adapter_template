@@ -192,7 +192,7 @@ class RobotAdapter:
         if execution:
             if self.api.is_command_completed():
                 execution.finished()
-                execution = None
+                self.execution = None
             else:
                 activity_identifier = execution.identifier
 
