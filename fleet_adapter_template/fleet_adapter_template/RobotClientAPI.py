@@ -40,6 +40,19 @@ class RobotAPI:
         # ------------------------ #
         return True
 
+    def change_map(
+        self,
+        robot_name: str,
+        map_name: str,
+    ):
+        ''' Request the robot to change current map to target map. This 
+            function should return True if the robot has accepted the 
+            request, else False '''
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return False
+    
     def navigate(
         self,
         robot_name: str,
