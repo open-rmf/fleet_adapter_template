@@ -203,7 +203,7 @@ class RobotAdapter:
                 destination, execution
             ),
             lambda activity: self.stop(activity),
-            lambda category, description, execution: self.perform_action(
+            lambda category, description, execution: self.execute_action(
                 category, description, execution
             )
         )
