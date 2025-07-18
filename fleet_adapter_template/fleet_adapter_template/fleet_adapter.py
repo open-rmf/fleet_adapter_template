@@ -198,15 +198,30 @@ class RobotAdapter:
         self.update_handle.update(state, activity_identifier)
 
     def make_callbacks(self):
-        return rmf_easy.RobotCallbacks(
+        callbacks = rmf_easy.RobotCallbacks(
             lambda destination, execution: self.navigate(
                 destination, execution
             ),
             lambda activity: self.stop(activity),
-            lambda category, description, execution: self.execute_action(
+            lambda category, description, execution: self.perform_action(
                 category, description, execution
             )
         )
+
+        callbacks.localize = lambda estimate, execution: self.localize(
+            estimate, execution
+        )
+
+        return callbacks
+
+    def localize(self, estimate, execution):
+        self.execution = execution
+        self.node.get_logger().info(
+            f'Commanding [{self.name}] to change map to'
+            f' [{estimate.map}]'
+        )
+        self.api.change_map(self.name, estimate.map)
+        execution.finished()
 
     def navigate(self, destination, execution):
         self.execution = execution
