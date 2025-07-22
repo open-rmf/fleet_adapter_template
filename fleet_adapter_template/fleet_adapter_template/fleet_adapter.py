@@ -188,12 +188,13 @@ class RobotAdapter:
 
     def update(self, state):
         activity_identifier = None
-        if self.execution:
+        execution = self.execution
+        if execution:
             if self.api.is_command_completed():
-                self.execution.finished()
+                execution.finished()
                 self.execution = None
             else:
-                activity_identifier = self.execution.identifier
+                activity_identifier = execution.identifier
 
         self.update_handle.update(state, activity_identifier)
 
@@ -223,8 +224,9 @@ class RobotAdapter:
         )
 
     def stop(self, activity):
-        if self.execution is not None:
-            if self.execution.identifier.is_same(activity):
+        execution = self.execution
+        if execution is not None:
+            if execution.identifier.is_same(activity):
                 self.execution = None
                 self.api.stop(self.name)
 
