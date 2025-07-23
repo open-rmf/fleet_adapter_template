@@ -215,7 +215,6 @@ class RobotAdapter:
         return callbacks
 
     def localize(self, estimate, execution):
-        self.execution = execution
         self.node.get_logger().info(
             f'Commanding [{self.name}] to change map to'
             f' [{estimate.map}]'
