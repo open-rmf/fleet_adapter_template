@@ -228,7 +228,7 @@ class RobotAdapter:
         else:
             self.node.get_logger().warn(
                 f'Failed to localise [{self.name}] on {estimate.map} '
-                f'at position [{estimate.position}]'
+                f'at position [{estimate.position}]. Requesting replanning...'
             )
             if self.update_handle is not None and self.update_handle.more() is not None:
                 self.update_handle.more().replan()
