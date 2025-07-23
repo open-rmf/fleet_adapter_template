@@ -40,12 +40,13 @@ class RobotAPI:
         # ------------------------ #
         return True
 
-    def change_map(
+    def localise(
         self,
         robot_name: str,
+        pose,
         map_name: str,
     ):
-        ''' Request the robot to change current map to target map. This 
+        ''' Request the robot to localise on target map. This 
             function should return True if the robot has accepted the 
             request, else False '''
         # ------------------------ #
