@@ -40,7 +40,7 @@ class RobotAPI:
         # ------------------------ #
         return True
 
-    def localise(
+    def localize(
         self,
         robot_name: str,
         pose,
