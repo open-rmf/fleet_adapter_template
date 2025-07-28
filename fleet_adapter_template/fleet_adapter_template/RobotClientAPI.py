@@ -46,7 +46,7 @@ class RobotAPI:
         pose,
         map_name: str,
     ):
-        ''' Request the robot to localise on target map. This 
+        ''' Request the robot to localize on target map. This 
             function should return True if the robot has accepted the 
             request, else False '''
         # ------------------------ #
