@@ -199,7 +199,7 @@ class RobotAdapter:
         self.update_handle.update(state, activity_identifier)
 
     def make_callbacks(self):
-        return rmf_easy.RobotCallbacks(
+        callbacks = rmf_easy.RobotCallbacks(
             lambda destination, execution: self.navigate(
                 destination, execution
             ),
@@ -208,6 +208,31 @@ class RobotAdapter:
                 category, description, execution
             )
         )
+
+        callbacks.localize = lambda estimate, execution: self.localize(
+            estimate, execution
+        )
+
+        return callbacks
+
+    def localize(self, estimate, execution):
+        self.node.get_logger().info(
+            f'Commanding [{self.name}] to change map to'
+            f' [{estimate.map}]'
+        )
+        if self.api.localize(self.name, estimate.position, estimate.map):
+            self.node.get_logger().info(
+                f'Localized [{self.name}] on {estimate.map} '
+                f'at position [{estimate.position}]'
+            )
+            execution.finished()
+        else:
+            self.node.get_logger().warn(
+                f'Failed to localize [{self.name}] on {estimate.map} '
+                f'at position [{estimate.position}]. Requesting replanning...'
+            )
+            if self.update_handle is not None and self.update_handle.more() is not None:
+                self.update_handle.more().replan()
 
     def navigate(self, destination, execution):
         self.execution = execution

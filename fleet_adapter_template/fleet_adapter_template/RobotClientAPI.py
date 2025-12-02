@@ -40,6 +40,20 @@ class RobotAPI:
         # ------------------------ #
         return True
 
+    def localize(
+        self,
+        robot_name: str,
+        pose,
+        map_name: str,
+    ):
+        ''' Request the robot to localize on target map. This 
+            function should return True if the robot has accepted the 
+            request, else False '''
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return False
+    
     def navigate(
         self,
         robot_name: str,
