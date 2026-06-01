@@ -59,6 +59,12 @@ ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH
 #Usage with the websocket uri
 ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s SERVER_URI
 
+#Usage with ros2 launch
+ros2 launch fleet_adapter_template fleet_adapter.launch.xml -c CONFIG_FILE -n NAV_GRAPH -s SERVER_URI
+
 #e.g.
 ros2 run fleet_adapter_template fleet_adapter -c CONFIG_FILE -n NAV_GRAPH -s ws://localhost:7878
+
+#e.g.
+ros2 launch fleet_adapter_template fleet_adapter.launch.xml -c CONFIG_FILE -n NAV_GRAPH -s ws://localhost:7878
 ```
