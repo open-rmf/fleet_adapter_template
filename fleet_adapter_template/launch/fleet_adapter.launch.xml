@@ -1,0 +1,31 @@
+<?xml version='1.0' ?>
+
+<launch>
+  <!-- Fleet Adapter Parameters -->
+  <arg name="config_file" default=""/>
+  <arg name="nav_graph_file" default=""/>
+  <arg name="server_uri" default=""/>
+  <arg name="use_sim_time" default="true"/>
+
+  <!-- Fleet Adapter Template  -->
+  <group if="$(var use_sim_time)">
+    <node pkg="fleet_adapter_template"
+          exec="fleet_adapter"
+          args="-c $(var config_file) -n $(var nav_graph_file) -sim"
+          output="both">
+
+      <param name="server_uri" value="$(var server_uri)"/>
+    </node>
+  </group>
+
+  <group unless="$(var use_sim_time)">
+    <node pkg="fleet_adapter_template"
+          exec="fleet_adapter"
+          args="-c $(var config_file) -n $(var nav_graph_file)"
+          output="both">
+
+      <param name="server_uri" value="$(var server_uri)"/>
+    </node>
+  </group>
+
+</launch>
