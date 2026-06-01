@@ -48,14 +48,19 @@ class RobotAPI:
         pose,
         map_name: str,
     ):
-        ''' Request the robot to localize on target map. This 
-            function should return True if the robot has accepted the 
-            request, else False '''
+        """
+        Request the robot to localize on target map.
+
+        Returns
+        -------
+            True if robot has accepted the request, False otherwise
+
+        """
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
-    
+
     def navigate(
         self,
         robot_name: str,
@@ -64,6 +69,10 @@ class RobotAPI:
         speed_limit=0.0
     ):
         """Request the robot to navigate to pose:[x,y,theta]."""
+        # ------------------------ #
+        # IMPLEMENT YOUR CODE HERE #
+        # ------------------------ #
+        return False
 
     def start_activity(
         self,
