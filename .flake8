@@ -1,0 +1,8 @@
+[flake8]
+exclude =
+    build,
+    install,
+    log,
+    .git,
+    __pycache__
+max-line-length = 99

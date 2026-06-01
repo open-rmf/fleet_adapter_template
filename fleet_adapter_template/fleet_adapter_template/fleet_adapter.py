@@ -12,23 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import argparse
-import yaml
-import time
-import threading
 import asyncio
-import nudged
+import sys
 
+import threading
+
+import time
+
+import nudged
 import rclpy
+from rclpy.duration import Duration
 import rclpy.node
 from rclpy.parameter import Parameter
-from rclpy.duration import Duration
-
 import rmf_adapter
 from rmf_adapter import Adapter
-import rmf_adapter.easy_full_control as rmf_easy
 from rmf_adapter import Transformation
+import rmf_adapter.easy_full_control as rmf_easy
+
+import yaml
 
 from .RobotClientAPI import RobotAPI
 
@@ -44,7 +46,7 @@ def compute_transforms(level, coords, node=None):
     if node:
         mse = nudged.estimate_error(tf, rmf_coords, robot_coords)
         node.get_logger().info(
-            f"Transformation error estimate for {level}: {mse}"
+            f'Transformation error estimate for {level}: {mse}'
         )
 
     return Transformation(
@@ -56,6 +58,8 @@ def compute_transforms(level, coords, node=None):
 # ------------------------------------------------------------------------------
 # Main
 # ------------------------------------------------------------------------------
+
+
 def main(argv=sys.argv):
     # Init rclpy and adapter
     rclpy.init(args=argv)
@@ -63,18 +67,20 @@ def main(argv=sys.argv):
     args_without_ros = rclpy.utilities.remove_ros_args(argv)
 
     parser = argparse.ArgumentParser(
-        prog="fleet_adapter",
-        description="Configure and spin up the fleet adapter")
-    parser.add_argument("-c", "--config_file", type=str, required=True,
-                        help="Path to the config.yaml file")
-    parser.add_argument("-n", "--nav_graph", type=str, required=True,
-                        help="Path to the nav_graph for this fleet adapter")
-    parser.add_argument("-s", "--server_uri", type=str, required=False, default="",
-                        help="URI of the api server to transmit state and task information.")
-    parser.add_argument("-sim", "--use_sim_time", action="store_true",
+        prog='fleet_adapter',
+        description='Configure and spin up the fleet adapter')
+    parser.add_argument('-c', '--config_file', type=str, required=True,
+                        help='Path to the config.yaml file')
+    parser.add_argument('-n', '--nav_graph', type=str, required=True,
+                        help='Path to the nav_graph for this fleet adapter')
+    parser.add_argument('-s', '--server_uri', type=str, required=False,
+                        default='',
+                        help='URI of the api server to transmit '
+                             'state and task information.')
+    parser.add_argument('-sim', '--use_sim_time', action='store_true',
                         help='Use sim time, default: false')
     args = parser.parse_args(args_without_ros[1:])
-    print(f"Starting fleet adapter...")
+    print('Starting fleet adapter...')
 
     config_path = args.config_file
     nav_graph_path = args.nav_graph
@@ -84,8 +90,13 @@ def main(argv=sys.argv):
     )
     assert fleet_config, f'Failed to parse config file [{config_path}]'
 
+    fleet_config = rmf_easy.FleetConfiguration.from_config_files(
+        config_path, nav_graph_path
+    )
+    assert fleet_config, f'Failed to parse config file [{config_path}]'
+
     # Parse the yaml in Python to get the fleet_manager info
-    with open(config_path, "r") as f:
+    with open(config_path, 'r') as f:
         config_yaml = yaml.safe_load(f)
 
     # ROS 2 node for the command handle
@@ -99,11 +110,12 @@ def main(argv=sys.argv):
 
     # Enable sim time for testing offline
     if args.use_sim_time:
-        param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
+        param = Parameter('use_sim_time', Parameter.Type.BOOL, True)
         node.set_parameters([param])
         adapter.node.use_sim_time()
 
     adapter.start()
+
     time.sleep(1.0)
 
     if args.server_uri == '':
@@ -229,9 +241,12 @@ class RobotAdapter:
                 self.api.stop(self.name)
 
     def execute_action(self, category: str, description: dict, execution):
-        ''' Trigger a custom action you would like your robot to perform.
+        """
+        Trigger a custom action you would like your robot to perform.
+
         You may wish to use RobotAPI.start_activity to trigger different
-        types of actions to your robot.'''
+        types of actions to your robot.
+        """
         self.execution = execution
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
