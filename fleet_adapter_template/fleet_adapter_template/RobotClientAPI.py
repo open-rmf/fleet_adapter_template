@@ -150,13 +150,6 @@ class RobotAPI:
             return RobotUpdateData(robot_name, map_name, position, battery_soc)
         return None
 
-    def _get_map_name(self, robot_name: str):
-        """Return the name of the map that the robot is currently on."""
-        # ------------------------ #
-        # IMPLEMENT YOUR CODE HERE #
-        # ------------------------ #
-        return None
-
 
 class RobotUpdateData:
     """Update data for a single robot."""
