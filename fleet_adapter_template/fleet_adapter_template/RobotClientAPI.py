@@ -139,7 +139,7 @@ class RobotAPI:
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
-        return None
+        return False
 
     def get_data(self, robot_name: str):
         """Return robot update data for the specified robot."""
