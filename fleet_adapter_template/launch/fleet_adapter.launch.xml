@@ -2,17 +2,18 @@
 
 <launch>
   <!-- Fleet Adapter Parameters -->
-  <arg name="config_file" default=""/>
-  <arg name="nav_graph_file" default=""/>
-  <arg name="server_uri" default=""/>
-  <arg name="use_sim_time" default="true"/>
+  <arg name="use_sim_time" default="true" description="Use the /clock topic for time to sync with simulation"/>
+  <arg name="config_file" description="The config file that provides important parameters for setting up the adapter"/>
+  <arg name="nav_graph_file" description="The graph that this fleet should use for navigation"/>
+  <arg name="server_uri" default="" description="The URI of the api server to transmit state and task information."/>
+  <arg name="output" default="both"/>
 
   <!-- Fleet Adapter Template  -->
   <group if="$(var use_sim_time)">
     <node pkg="fleet_adapter_template"
           exec="fleet_adapter"
           args="-c $(var config_file) -n $(var nav_graph_file) -sim"
-          output="both">
+          output="$(var output)">
 
       <param name="server_uri" value="$(var server_uri)"/>
     </node>
@@ -22,7 +23,7 @@
     <node pkg="fleet_adapter_template"
           exec="fleet_adapter"
           args="-c $(var config_file) -n $(var nav_graph_file)"
-          output="both">
+          output="$(var output)">
 
       <param name="server_uri" value="$(var server_uri)"/>
     </node>
