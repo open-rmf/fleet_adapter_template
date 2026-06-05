@@ -35,7 +35,7 @@ class RobotAPI:
         self.timeout = 5.0
         self.debug = False
 
-    def check_connection(self):
+    def check_connection(self) -> bool:
         """Return True if connection to the robot API server is successful."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
@@ -47,7 +47,7 @@ class RobotAPI:
         robot_name: str,
         pose,
         map_name: str,
-    ):
+    ) -> bool:
         """Request the robot to localize on target map."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
@@ -60,7 +60,7 @@ class RobotAPI:
         pose,
         map_name: str,
         speed_limit=0.0
-    ):
+    ) -> bool:
         """Request the robot to navigate to pose:[x,y,theta]."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
@@ -72,49 +72,49 @@ class RobotAPI:
         robot_name: str,
         activity: str,
         label: str
-    ):
+    ) -> bool:
         """Request the robot to begin a process."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
 
-    def stop(self, robot_name: str):
+    def stop(self, robot_name: str) -> bool:
         """Request the robot to stop."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
 
-    def position(self, robot_name: str):
+    def position(self, robot_name: str) -> tuple:
         """Return [x, y, theta] expressed in the robot's coordinate frame."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return None
 
-    def battery_soc(self, robot_name: str):
+    def battery_soc(self, robot_name: str) -> float:
         """Return state of charge of robot as a value between 0.0 and 1.0."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return None
 
-    def get_map_name(self, robot_name: str):
+    def get_map_name(self, robot_name: str) -> str:
         """Return the name of the map that the robot is currently on."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return None
 
-    def is_command_completed(self):
+    def is_command_completed(self) -> bool:
         """Return True if the robot has completed its last command."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
         return False
 
-    def get_data(self, robot_name: str):
+    def get_data(self, robot_name: str) -> RobotUpdateData:
         """Return robot update data for the specified robot."""
         map_name = self.get_map_name(robot_name)
         position = self.position(robot_name)
