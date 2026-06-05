@@ -261,8 +261,9 @@ class RobotAdapter:
         )
 
     def stop(self, activity):
-        if self.execution is not None:
-            if self.execution.identifier.is_same(activity):
+        execution = self.execution
+        if execution is not None:
+            if execution.identifier.is_same(activity):
                 self.execution = None
                 self.api.stop(self.name)
 
