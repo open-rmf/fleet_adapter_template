@@ -114,7 +114,7 @@ class RobotAPI:
         # ------------------------ #
         return False
 
-    def get_data(self, robot_name: str) -> RobotUpdateData:
+    def get_data(self, robot_name: str):
         """Return robot update data for the specified robot."""
         map_name = self.get_map_name(robot_name)
         position = self.position(robot_name)
