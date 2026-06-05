@@ -48,14 +48,7 @@ class RobotAPI:
         pose,
         map_name: str,
     ):
-        """
-        Request the robot to localize on target map.
-
-        Returns
-        -------
-            True if robot has accepted the request, False otherwise
-
-        """
+        """Request the robot to localize on target map."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
@@ -87,17 +80,7 @@ class RobotAPI:
         return False
 
     def stop(self, robot_name: str):
-        """
-        Command the robot to stop.
-
-        Args:
-            - robot_name: Name of the robot
-
-        Returns
-        -------
-            True if robot has successfully stopped, False otherwise
-
-        """
+        """Request the robot to stop."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
@@ -111,17 +94,7 @@ class RobotAPI:
         return None
 
     def battery_soc(self, robot_name: str):
-        """
-        Return state of charge of robot as a value between 0.0 and 1.0.
-
-        Args:
-            - robot_name: Name of the robot
-
-        Returns
-        -------
-            - State of charge as float between 0.0 and 1.0, or None if error
-
-        """
+        """Return state of charge of robot as a value between 0.0 and 1.0."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
         # ------------------------ #
