@@ -90,11 +90,6 @@ def main(argv=sys.argv):
     )
     assert fleet_config, f'Failed to parse config file [{config_path}]'
 
-    fleet_config = rmf_easy.FleetConfiguration.from_config_files(
-        config_path, nav_graph_path
-    )
-    assert fleet_config, f'Failed to parse config file [{config_path}]'
-
     # Parse the yaml in Python to get the fleet_manager info
     with open(config_path, 'r') as f:
         config_yaml = yaml.safe_load(f)
