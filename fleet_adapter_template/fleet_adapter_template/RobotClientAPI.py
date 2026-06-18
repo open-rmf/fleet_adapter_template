@@ -86,7 +86,7 @@ class RobotAPI:
         # ------------------------ #
         return False
 
-    def position(self, robot_name: str) -> tuple:
+    def position(self, robot_name: str) -> tuple[float, float, float]:
         """Return [x, y, theta] expressed in the robot's coordinate frame."""
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
