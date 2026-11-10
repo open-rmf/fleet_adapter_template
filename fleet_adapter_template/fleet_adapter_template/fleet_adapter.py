@@ -294,7 +294,7 @@ def update_robot(robot: RobotAdapter):
         return
 
     state = rmf_easy.RobotState(
-        data.map,
+        data.map_name,
         data.position,
         data.battery_soc
     )
