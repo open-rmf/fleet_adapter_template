@@ -91,21 +91,23 @@ class TrafficLightCommandHandle:
         with self._lock:
             self.logger.info(
                 f'[{self.robot_name}] RMF requested PAUSE')
-            self._paused_by_rmf = True
-            self._gated_at_cp = None
             if not self.robot_api.pause(self.robot_name):
                 self.logger.warn(
                     f'[{self.robot_name}] pause command failed')
+                return
+            self._paused_by_rmf = True
+            self._gated_at_cp = None
 
     def resume_cb(self):
         """Resume the robot."""
         with self._lock:
             self.logger.info(
                 f'[{self.robot_name}] RMF requested RESUME')
-            self._paused_by_rmf = False
             if not self.robot_api.resume(self.robot_name):
                 self.logger.warn(
                     f'[{self.robot_name}] resume command failed')
+                return
+            self._paused_by_rmf = False
 
     # ==================================================================
     # Polling-loop interface (called per cycle from fleet_adapter's update_loop)
@@ -338,6 +340,7 @@ class TrafficLightCommandHandle:
                 if not self.robot_api.resume(self.robot_name):
                     self.logger.warn(
                         f'[{self.robot_name}] resume command failed')
+                    return
                 self._paused_by_rmf = False
                 self._gated_at_cp = None
             return
@@ -361,6 +364,7 @@ class TrafficLightCommandHandle:
                     self.logger.warn(
                         f'[{self.robot_name}] pause_at_checkpoint '
                         f'command failed')
+                    return
                 self._gated_at_cp = next_cp
             return
 
@@ -371,6 +375,7 @@ class TrafficLightCommandHandle:
                 if not self.robot_api.pause(self.robot_name):
                     self.logger.warn(
                         f'[{self.robot_name}] pause command failed')
+                    return
                 self._paused_by_rmf = True
                 self._gated_at_cp = None
             return
@@ -398,6 +403,7 @@ class TrafficLightCommandHandle:
                 if not self.robot_api.resume(self.robot_name):
                     self.logger.warn(
                         f'[{self.robot_name}] resume command failed')
+                    return
             self._last_waiting_at_result = result
             return
 
@@ -435,6 +441,7 @@ class TrafficLightCommandHandle:
                 if not self.robot_api.resume(self.robot_name):
                     self.logger.warn(
                         f'[{self.robot_name}] resume command failed')
+                    return
             self._last_waiting_after_result = result
             return
 
